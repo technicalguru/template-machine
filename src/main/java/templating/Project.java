@@ -1,8 +1,10 @@
 package templating;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +41,11 @@ public class Project {
 			String datetime = DATETIMEBUILDER.format(new Date());
 			File outRoot = new File(projectRoot+"-"+datetime);
 			
+			// Encoding
+			System.setProperty("file.encoding", "UTF-8");
+			for (Map.Entry<String,Charset> entry : Charset.availableCharsets().entrySet()) {
+				log.info("Supported: "+entry.getKey());
+			}
 			// Recursively dive into the folder and generate the templates
 			generateRecursively(null, projectRoot, outRoot);
 			
@@ -66,5 +73,17 @@ public class Project {
 		}
 	}
 	
-	
+	/**
+	 * Returns true when a file (template or localization) can be used for templating.
+	 * <p>This is being used for .bak, ~ or .swap files (temporary and backup files).</p>
+	 * @param file - the file to be checked
+	 * @return {@code true} when file can be used in template reading
+	 */
+	public static boolean isValidFile(File file) {
+		String name = file.getName();
+		if (name.startsWith(".")) return false;
+		if (name.endsWith("~")) return false;
+		if (name.endsWith(".bak")) return false;
+		return true;
+	}
 }

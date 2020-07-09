@@ -1,7 +1,6 @@
 package templating;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
@@ -23,6 +22,7 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
+import templating.util.FileReadUtils;
 
 /**
  * Generates all files in a directory (not recursively!)
@@ -40,20 +40,23 @@ public class Generator implements Runnable, TemplateLoader {
 
 	protected Properties templates;
 	protected Map<String,Properties> localization;
-	protected Charset    encoding;
+	protected Map<String,Map<String,String>> mergedLocalizations;
+	protected Charset    readEncoding;
+	protected Charset    writeEncoding;
 	protected Configuration templateConfig;
 	protected long       lastModified;
-	
+
 	/**
 	 * Constructor.
 	 */
 	public Generator(Generator parent, File dir, File outDir) {
-		this.parent       = parent;
-		this.dir          = dir;
-		this.outDir       = outDir;
-		this.encoding     = Charset.defaultCharset();
-		this.lastModified = System.currentTimeMillis();
-		
+		this.parent        = parent;
+		this.dir           = dir;
+		this.outDir        = outDir;
+		this.readEncoding  = Charset.forName("UTF-8");
+		this.writeEncoding = Charset.forName("UTF-8");
+		this.lastModified  = System.currentTimeMillis();
+
 		// This is a bit weird. Template loader needs to be singleton as well as configuration. TODO
 		templateConfig = new Configuration(Configuration.VERSION_2_3_29);
 		templateConfig.setTemplateLoader(this);
@@ -73,17 +76,15 @@ public class Generator implements Runnable, TemplateLoader {
 			// Prepare
 			if (parent != null) {
 				templates    = new Properties(parent.getTemplates());
-				localization = new HashMap<>(parent.getLocalization());
 			} else {
 				templates    = new Properties();
-				localization = new HashMap<>();
 			}
 			loadLocalTemplates();
 			loadLocalLocalization();
 
 			// Process each file now with each language
 			for (File child : dir.listFiles()) {
-				if (!child.getName().startsWith("__") && !child.getName().startsWith(".") && !child.getName().endsWith("~") && child.isFile() && child.canRead()) {
+				if (!child.getName().startsWith("__") && Project.isValidFile(child) && child.isFile() && child.canRead()) {
 					// Now for each language
 					Set<String> languages = getLanguages();
 					if (languages.size() > 1) {
@@ -112,11 +113,24 @@ public class Generator implements Runnable, TemplateLoader {
 	 * @param outFile      - the output file
 	 */
 	protected void generateFile(File templateFile, String language, File outFile) throws IOException, TemplateException {
+		// Ignore when the is a language specific template file
+		File langTemplate = new File(new File(templateFile.getParentFile(), language), templateFile.getName());
+		if (langTemplate.exists()) return;
+		
+		// Ignore when the template file is already language specific
+		String parentName = templateFile.getParentFile().getName();
+		if (languageExists(parentName)) {
+			// Only process when the language is the same
+			if (!parentName.equals(language)) return;
+			// But we need to change the output file
+			outFile = new File(outFile.getParentFile().getParentFile(), outFile.getName());
+		}
+		
 		log.info("Generating "+outFile.getPath()+"...");
 		// Ensure the parent dir exists
 		FileUtils.forceMkdirParent(outFile);
 		Template temp = templateConfig.getTemplate(templateFile.getName());
-		temp.process(localization, new FileWriter(outFile));
+		temp.process(getMergedLanguage(language), new FileWriter(outFile, this.writeEncoding));
 	}
 
 	/**
@@ -135,6 +149,28 @@ public class Generator implements Runnable, TemplateLoader {
 		return localization;
 	}
 
+	protected Map<String,String> getMergedLanguage(String language) {
+		Map<String,String> rc = mergedLocalizations.get(language);
+		if (rc == null) {
+			rc = new HashMap<>();
+
+			Properties defaults = localization.get("default");
+			if (defaults != null) {
+				for (Map.Entry<Object, Object> entry : defaults.entrySet()) {
+					rc.put((String)entry.getKey(), (String)entry.getValue());
+				}
+			}
+			Properties values = localization.get(language);
+			if (values != null) {
+				for (Map.Entry<Object, Object> entry : values.entrySet()) {
+					rc.put((String)entry.getKey(), (String)entry.getValue());
+				}
+			}
+			mergedLocalizations.put(language, rc);
+		}
+		return rc;
+	}
+
 	/**
 	 * Override parent definitions of templates.
 	 * @throws IOException when the templates cannot be read
@@ -143,8 +179,8 @@ public class Generator implements Runnable, TemplateLoader {
 		File tDir = new File(dir, "__templates");
 		if (tDir.exists() && tDir.isDirectory() && tDir.canRead()) {
 			for (File child : tDir.listFiles()) {
-				if (child.isFile() && child.canRead() && !child.getName().startsWith(".") && !child.getName().endsWith("~")) {
-					templates.setProperty(child.getName(), FileUtils.readFileToString(child, encoding));
+				if (child.isFile() && child.canRead() && Project.isValidFile(child)) {
+					templates.setProperty(child.getName(), FileReadUtils.readFile(child, readEncoding));
 				}
 			}
 		}
@@ -155,20 +191,49 @@ public class Generator implements Runnable, TemplateLoader {
 	 * @throws IOException the the localization files cannot be read
 	 */
 	protected void loadLocalLocalization() throws IOException {
-		// TODO Build a combination of all localizations (take the parent ones and add local ones!)
+		// Get a copy of all parent languages
+		localization = new HashMap<>();
+		mergedLocalizations = new HashMap<>();
+
+		if (parent != null) {
+			for (Map.Entry<String,Properties> entry : parent.getLocalization().entrySet()) {
+				Properties copy = new Properties();
+				for (Map.Entry<Object,Object> l : entry.getValue().entrySet()) {
+					copy.put(l.getKey(), l.getValue());
+				}
+				localization.put(entry.getKey(), copy);
+			};
+		}
+
+		// Load the local overrides
 		File tDir = new File(dir, "__localization");
 		if (tDir.exists() && tDir.isDirectory() && tDir.canRead()) {
 			for (File child : tDir.listFiles()) {
-				if (child.isFile() && child.canRead() && !child.getName().startsWith(".") && !child.getName().endsWith("~")) {
+				if (child.isFile() && child.canRead() && Project.isValidFile(child)) {
 					String language = FilenameUtils.getBaseName(child.getName());
 					Properties values = new Properties();
-					values.load(new FileReader(child));
-					localization.put(language, values);
+					values.load(FileReadUtils.getReader(child, this.readEncoding));
+
+					// Add overrides to existing
+					Properties my = localization.get(language);
+					if (my == null) {
+						my = new Properties();
+						localization.put(language, my);
+					}
+					for (Map.Entry<Object,Object> entry : values.entrySet()) {
+						my.put(entry.getKey(), entry.getValue());
+					}
 				}
 			}
 		}
 	}
 
+	protected boolean languageExists(String lang) {
+		// Default never exists
+		if ("default".equals(lang)) return false;
+		return localization.containsKey(lang);
+	}
+	
 	/**
 	 * Returns all existing languages.
 	 * @return set of language keys
@@ -180,6 +245,8 @@ public class Generator implements Runnable, TemplateLoader {
 				rc.add(language);
 			}
 		}
+		// Never return the default one
+		rc.remove("default");
 		return rc;
 	}
 
@@ -201,16 +268,10 @@ public class Generator implements Runnable, TemplateLoader {
 	public String getLocalizedString(String language, String key) {
 		Properties locals = localization.get(language);
 		if (locals == null) {
-			if (parent != null) {
-				return parent.getLocalizedString(language, key);
-			}
 			return "";
 		}
 		String rc = locals.getProperty(key);
 		if (rc == null) {
-			if (parent != null) {
-				return parent.getLocalizedString(language, key);
-			}
 			rc = "";
 		}
 		return rc;
@@ -227,7 +288,7 @@ public class Generator implements Runnable, TemplateLoader {
 			if (f.exists() && f.isFile() && f.canRead()) {
 				return f;
 			}
-			log.error("Cannot find "+name+" ("+f.getAbsolutePath()+")");
+			// log.error("Cannot find "+name+" ("+f.getAbsolutePath()+")");
 			return null;
 		}
 		return name;
@@ -247,7 +308,7 @@ public class Generator implements Runnable, TemplateLoader {
 	@Override
 	public Reader getReader(Object templateSource, String encoding) throws IOException {
 		if (templateSource instanceof File) {
-			return new FileReader(templateSource.toString());
+			return FileReadUtils.getReader((File)templateSource, readEncoding);
 		}
 		return new StringReader(getTemplate(templateSource.toString()));
 	}
@@ -258,6 +319,6 @@ public class Generator implements Runnable, TemplateLoader {
 	@Override
 	public void closeTemplateSource(Object templateSource) throws IOException {
 	}
-	
-	
+
+
 }
