@@ -2,9 +2,6 @@ package templating;
 
 import java.io.File;
 import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,33 +16,61 @@ public class Project {
 	/** The logger */
 	public static Logger log = LoggerFactory.getLogger(Project.class);
 	
-	private static SimpleDateFormat DATETIMEBUILDER = new SimpleDateFormat("yyyyMMddHHmmss");
-	
-	protected File projectRoot;
+	protected File    projectRoot;
+	protected File    outRoot;
+	protected Charset readEncoding  = Charset.defaultCharset();
+	protected Charset writeEncoding = Charset.defaultCharset();
 	
 	/**
 	 * Constructor.
 	 */
-	public Project(File projectRoot) {
+	public Project(File projectRoot, File outRoot) {
 		this.projectRoot = projectRoot;
+		this.outRoot     = outRoot;
 	}
 
 	/**
-	 * Generate the project templates.
+	 * Returns the encoding for reading templates and language files.
+	 * @return the readEncoding
+	 */
+	public Charset getReadEncoding() {
+		return readEncoding;
+	}
+
+	/**
+	 * Sets the encoding for reading templates and language files.
+	 * @param readEncoding the readEncoding to set
+	 */
+	public void setReadEncoding(Charset readEncoding) {
+		this.readEncoding = readEncoding;
+	}
+
+	/**
+	 * Returns the encoding for writing generated files.
+	 * @return the writeEncoding
+	 */
+	public Charset getWriteEncoding() {
+		return writeEncoding;
+	}
+
+	/**
+	 * Sets the encoding for writing generated files.
+	 * @param writeEncoding the writeEncoding to set
+	 */
+	public void setWriteEncoding(Charset writeEncoding) {
+		this.writeEncoding = writeEncoding;
+	}
+
+	/**
+	 * Generate the project files.
 	 */
 	public void generate() {
 		try {
 			log.info("Generating project "+projectRoot+"...");
 			
-			// Generating the output folder name
-			String datetime = DATETIMEBUILDER.format(new Date());
-			File outRoot = new File(projectRoot+"-"+datetime);
-			
 			// Encoding
-			System.setProperty("file.encoding", "UTF-8");
-			for (Map.Entry<String,Charset> entry : Charset.availableCharsets().entrySet()) {
-				log.info("Supported: "+entry.getKey());
-			}
+			System.setProperty("file.encoding", readEncoding.name());
+
 			// Recursively dive into the folder and generate the templates
 			generateRecursively(null, projectRoot, outRoot);
 			
@@ -64,7 +89,7 @@ public class Project {
 	 */
 	protected void generateRecursively(Generator parent, File dir, File outDir) {
 		// Create the generator
-		Generator generator = new Generator(parent, dir, outDir);
+		Generator generator = new Generator(parent, dir, outDir, readEncoding, writeEncoding);
 		generator.run();
 		for (File child : dir.listFiles()) {
 			if (!child.getName().startsWith("__") && child.isDirectory() && child.canRead()) {

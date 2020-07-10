@@ -1,10 +1,8 @@
 package templating;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.Charset;
@@ -51,15 +49,15 @@ public class Generator implements Runnable, TemplateLoader {
 	/**
 	 * Constructor.
 	 */
-	public Generator(Generator parent, File dir, File outDir) {
+	public Generator(Generator parent, File dir, File outDir, Charset readEncoding, Charset writeEncoding) {
 		this.parent        = parent;
 		this.dir           = dir;
 		this.outDir        = outDir;
-		this.readEncoding  = Charset.forName("UTF-8");
-		this.writeEncoding = Charset.forName("UTF-8");
+		this.readEncoding  = readEncoding;
+		this.writeEncoding = writeEncoding;
 		this.lastModified  = System.currentTimeMillis();
 
-		// This is a bit weird. Template loader needs to be singleton as well as configuration. TODO
+		// FreeMarker configuration is always specific to directory.
 		templateConfig = new Configuration(Configuration.VERSION_2_3_29);
 		templateConfig.setTemplateLoader(this);
 		templateConfig.setDefaultEncoding("UTF-8");
