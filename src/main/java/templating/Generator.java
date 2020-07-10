@@ -37,12 +37,12 @@ public class Generator implements Runnable, TemplateLoader {
 	protected Generator parent;
 	protected File      dir;
 	protected File      outDir;
+	protected Charset    readEncoding;
+	protected Charset    writeEncoding;
 
 	protected Properties templates;
 	protected Map<String,Properties> localization;
 	protected Map<String,Map<String,String>> mergedLocalizations;
-	protected Charset    readEncoding;
-	protected Charset    writeEncoding;
 	protected Configuration templateConfig;
 	protected long       lastModified;
 
