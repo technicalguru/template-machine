@@ -40,7 +40,7 @@ public class FileReadUtils {
 			in.init();
 			rc = new InputStreamReader(in, encoding);
 		} else {
-			rc = new FileReader(file, encoding);
+			rc = new InputStreamReader(new FileInputStream(file), encoding);
 		}
 
 		return rc;

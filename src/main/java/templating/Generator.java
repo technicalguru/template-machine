@@ -1,8 +1,10 @@
 package templating;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.Charset;
@@ -130,7 +132,7 @@ public class Generator implements Runnable, TemplateLoader {
 		// Ensure the parent dir exists
 		FileUtils.forceMkdirParent(outFile);
 		Template temp = templateConfig.getTemplate(templateFile.getName());
-		temp.process(getMergedLanguage(language), new FileWriter(outFile, this.writeEncoding));
+		temp.process(getMergedLanguage(language), new FileWriter(outFile));
 	}
 
 	/**
