@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The main class for starting.
+ * The main class for templating.
  * @author ralph
  *
  */
@@ -35,7 +35,7 @@ public class Templating {
 	
 	/**
 	 * Main method.
-	 * @param args
+	 * @param args - arguments will be written on command line when called without any option
 	 */
 	public static void main(String[] args) {
 		try {

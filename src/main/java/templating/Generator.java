@@ -34,17 +34,17 @@ public class Generator implements Runnable, TemplateLoader {
 	/** The logger */
 	public static Logger log = LoggerFactory.getLogger(Generator.class);
 
-	protected Generator parent;
-	protected File      dir;
-	protected File      outDir;
+	protected Generator  parent;
+	protected File       dir;
+	protected File       outDir;
 	protected Charset    readEncoding;
 	protected Charset    writeEncoding;
 
-	protected Properties templates;
-	protected Map<String,Properties> localization;
+	protected Properties                     templates;
+	protected Map<String,Properties>         localization;
 	protected Map<String,Map<String,String>> mergedLocalizations;
-	protected Configuration templateConfig;
-	protected long       lastModified;
+	protected Configuration                  templateConfig;
+	protected long                           lastModified;
 
 	/**
 	 * Constructor.
@@ -107,7 +107,7 @@ public class Generator implements Runnable, TemplateLoader {
 	}
 
 	/**
-	 * Process a single template and generates the file
+	 * Process a single template and generates the file.
 	 * @param templateFile - the template file
 	 * @param language     - the language to be used (cannot be null)
 	 * @param outFile      - the output file
@@ -142,13 +142,18 @@ public class Generator implements Runnable, TemplateLoader {
 	}
 
 	/**
-	 * Returns the localizations
+	 * Returns the localizations.
 	 * @return the localizations
 	 */
 	public Map<String,Properties> getLocalization() {
 		return localization;
 	}
 
+	/**
+	 * Merge all language keys so all values are available for a specific language.
+	 * @param language - the language key
+	 * @return all keys including from default language
+	 */
 	protected Map<String,String> getMergedLanguage(String language) {
 		Map<String,String> rc = mergedLocalizations.get(language);
 		if (rc == null) {
@@ -191,10 +196,10 @@ public class Generator implements Runnable, TemplateLoader {
 	 * @throws IOException the the localization files cannot be read
 	 */
 	protected void loadLocalLocalization() throws IOException {
-		// Get a copy of all parent languages
 		localization = new HashMap<>();
 		mergedLocalizations = new HashMap<>();
-
+		
+		// Get a copy of all parent languages
 		if (parent != null) {
 			for (Map.Entry<String,Properties> entry : parent.getLocalization().entrySet()) {
 				Properties copy = new Properties();
@@ -228,6 +233,11 @@ public class Generator implements Runnable, TemplateLoader {
 		}
 	}
 
+	/**
+	 * Returns whether language exists.
+	 * @param lang - language key
+	 * @return {@code true} when language exists ("default" key always returns false)
+	 */
 	protected boolean languageExists(String lang) {
 		// Default never exists
 		if ("default".equals(lang)) return false;
@@ -235,7 +245,7 @@ public class Generator implements Runnable, TemplateLoader {
 	}
 	
 	/**
-	 * Returns all existing languages.
+	 * Returns all existing languages except "default".
 	 * @return set of language keys
 	 */
 	public Set<String> getLanguages() {
@@ -257,24 +267,6 @@ public class Generator implements Runnable, TemplateLoader {
 	 */
 	public String getTemplate(String name) {
 		return templates.getProperty(name);
-	}
-
-	/**
-	 * Returns the localized value of the given key 
-	 * @param language - the language to be used
-	 * @param key      - the key of the value
-	 * @return the localized value or {@code ""} (empty string) of not found
-	 */
-	public String getLocalizedString(String language, String key) {
-		Properties locals = localization.get(language);
-		if (locals == null) {
-			return "";
-		}
-		String rc = locals.getProperty(key);
-		if (rc == null) {
-			rc = "";
-		}
-		return rc;
 	}
 
 	/**
