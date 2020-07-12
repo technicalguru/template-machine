@@ -10,3 +10,4 @@
 @for %%i in (%ROOTDIR%lib\*.jar) DO @CALL SET CLASSPATH=!CLASSPATH!;%%i
 
 @java -cp %CLASSPATH% templating.Templating %*
+pause
