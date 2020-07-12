@@ -5,7 +5,6 @@ package templating;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -45,7 +44,7 @@ public class Templating {
 
 			// The template directory
 			String projectDir   = cl.getOptionValue("t");
-			File projectDirFile = new File(new URI(projectDir));
+			File projectDirFile = new File(projectDir);
 			if (!projectDirFile.isDirectory() || !projectDirFile.canRead()) throw new FileNotFoundException("Cannot read "+projectDir);
 			
 			// The output directory
@@ -58,7 +57,7 @@ public class Templating {
 			}
 			
 			// Handle any existing output directory
-			File outDirFile = new File(new URI(outDir));
+			File outDirFile = new File(outDir);
 			if (outDirFile.exists()) {
 				if (!cl.hasOption("f")) {
 					throw new TemplatingException("Output directory already exists. Use -f option to force overwriting");
