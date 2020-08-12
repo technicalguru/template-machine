@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -34,9 +36,13 @@ public class Generator implements Runnable, TemplateLoader {
 	/** The logger */
 	public static Logger log = LoggerFactory.getLogger(Generator.class);
 
+	private static SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd/MM/yyyy");
+	private static SimpleDateFormat TIME_FORMATTER = new SimpleDateFormat("HH:mm:ss");
+
 	protected Generator  parent;
 	protected File       dir;
 	protected File       outDir;
+	protected Date       generationTime;
 	protected Charset    readEncoding;
 	protected Charset    writeEncoding;
 
@@ -49,13 +55,14 @@ public class Generator implements Runnable, TemplateLoader {
 	/**
 	 * Constructor.
 	 */
-	public Generator(Generator parent, File dir, File outDir, Charset readEncoding, Charset writeEncoding) {
-		this.parent        = parent;
-		this.dir           = dir;
-		this.outDir        = outDir;
-		this.readEncoding  = readEncoding;
-		this.writeEncoding = writeEncoding;
-		this.lastModified  = System.currentTimeMillis();
+	public Generator(Generator parent, File dir, File outDir, Charset readEncoding, Charset writeEncoding, Date generationTime) {
+		this.parent         = parent;
+		this.dir            = dir;
+		this.outDir         = outDir;
+		this.readEncoding   = readEncoding;
+		this.writeEncoding  = writeEncoding;
+		this.generationTime = generationTime;
+		this.lastModified   = System.currentTimeMillis();
 
 		// FreeMarker configuration is always specific to directory.
 		templateConfig = new Configuration(Configuration.VERSION_2_3_29);
@@ -129,8 +136,15 @@ public class Generator implements Runnable, TemplateLoader {
 		log.info("Generating "+outFile.getPath()+"...");
 		// Ensure the parent dir exists
 		FileUtils.forceMkdirParent(outFile);
+		
+		// Prepare localization
+		Map<String,String> localization = getMergedLanguage(language);
+		localization.put("templateAbsPath", templateFile.getCanonicalPath());
+		localization.put("templateRelPath", getRelativePath(templateFile));
+
+		// Generate
 		Template temp = templateConfig.getTemplate(templateFile.getName());
-		temp.process(getMergedLanguage(language), new FileWriter(outFile));
+		temp.process(localization, new FileWriter(outFile));
 	}
 
 	/**
@@ -171,6 +185,12 @@ public class Generator implements Runnable, TemplateLoader {
 					rc.put((String)entry.getKey(), (String)entry.getValue());
 				}
 			}
+			
+			// Set default values
+			rc.put("languageKey", language);
+			rc.put("runDate", DATE_FORMATTER.format(generationTime));
+			rc.put("runTime", TIME_FORMATTER.format(generationTime));
+
 			mergedLocalizations.put(language, rc);
 		}
 		return rc;
@@ -269,6 +289,20 @@ public class Generator implements Runnable, TemplateLoader {
 		return templates.getProperty(name);
 	}
 
+	/**
+	 * Returns the relative path  of the file in the project
+	 * @param file - the file to relate
+	 * @return the relative path
+	 * @throws IOException - when an exception occurs
+	 */
+	protected String getRelativePath(File file) throws IOException {
+		String path = "";
+		if (parent != null) {
+			path = parent.getRelativePath(dir) + File.separator;
+		}
+		return path + file.getName();
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 */
