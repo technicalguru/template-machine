@@ -1,10 +1,20 @@
-Testfile dir-11:
-----------------
-value1: expected: TBD               actual: ${value1}
-value2: expected: /de.value2        actual: ${value2}
-value3: expected: TBD               actual: ${value3}
-value4: expected: TBD               actual: ${value4}
-value5: expected: TBD               actual: ${value5}
-value6: expected: TBD               actual: ${value6}
-value7: expected: TBD               actual: ${value7}
- 
+# Testfile dir-11:
+##################
+# value1 should be the local value
+value1: expected: /dir-11/de.value1      actual: ${value1}
+
+# value2 should be the global language default
+value2: expected: /de.value2             actual: ${value2}
+
+# value3 should be the global default
+value3: expected: /default.value3        actual: ${value3}
+
+# value4 should be the local default
+value4: expected: /dir-11/default.value4 actual: ${value4}
+
+# value5 should be the parent default
+value5: expected: /dir-1/default.value5  actual: ${value5}
+
+# value6 should be the parent language default
+value6: expected: /dir-1/de.value6       actual: ${value6}
+

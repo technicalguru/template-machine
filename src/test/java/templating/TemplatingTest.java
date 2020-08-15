@@ -93,7 +93,7 @@ public class TemplatingTest {
 	private static void populateValuesInFile(List<ValueTest> collection, File file) throws Exception {
 		int line = 1;
 		for (String s : FileUtils.readLines(file, ENCODING)) {
-			if (!s.startsWith("#")) {
+			if (!s.startsWith("#") && !s.trim().isEmpty()) {
 				collection.add(new ValueTest(file, line, s));
 			}
 			line++;
