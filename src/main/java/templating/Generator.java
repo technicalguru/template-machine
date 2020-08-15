@@ -5,9 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -39,13 +37,11 @@ public class Generator implements Runnable, TemplateLoader {
 	private static SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd/MM/yyyy");
 	private static SimpleDateFormat TIME_FORMATTER = new SimpleDateFormat("HH:mm:ss");
 
-	protected Generator  parent;
-	protected File       dir;
-	protected File       outDir;
-	protected Date       generationTime;
-	protected Charset    readEncoding;
-	protected Charset    writeEncoding;
-
+	protected Generator                      parent;
+	protected File                           dir;
+	protected File                           outDir;
+	protected TemplatingConfig               config;
+	
 	protected Properties                     templates;
 	protected Map<String,Properties>         localization;
 	protected Map<String,Map<String,String>> mergedLocalizations;
@@ -55,13 +51,11 @@ public class Generator implements Runnable, TemplateLoader {
 	/**
 	 * Constructor.
 	 */
-	public Generator(Generator parent, File dir, File outDir, Charset readEncoding, Charset writeEncoding, Date generationTime) {
+	public Generator(Generator parent, File dir, File outDir, TemplatingConfig config) {
 		this.parent         = parent;
 		this.dir            = dir;
 		this.outDir         = outDir;
-		this.readEncoding   = readEncoding;
-		this.writeEncoding  = writeEncoding;
-		this.generationTime = generationTime;
+		this.config         = config;
 		this.lastModified   = System.currentTimeMillis();
 
 		// FreeMarker configuration is always specific to directory.
@@ -89,22 +83,25 @@ public class Generator implements Runnable, TemplateLoader {
 			loadLocalTemplates();
 			loadLocalLocalization();
 
-			// Process each file now with each language
-			for (File child : dir.listFiles()) {
-				if (!child.getName().startsWith("__") && Project.isValidFile(child) && child.isFile() && child.canRead()) {
-					// Now for each language
-					Set<String> languages = getLanguages();
-					if (languages.size() > 1) {
-						for (String language : languages) {
-							File outFile = new File(new File(outDir, language), child.getName());
-							generateFile(child, language, outFile);
+			// Do only when we are in sub-folder (if configured)
+			if ((config.getSubDir() == null) || config.getSubDir().equals(dir) || FileUtils.directoryContains(config.getSubDir(), dir)) {
+				// Process each file now with each language
+				for (File child : dir.listFiles()) {
+					if (!child.getName().startsWith("__") && Project.isValidFile(child) && child.isFile() && child.canRead()) {
+						// Now for each language
+						Set<String> languages = getLanguages();
+						if (languages.size() > 1) {
+							for (String language : languages) {
+								File outFile = new File(new File(outDir, language), child.getName());
+								generateFile(child, language, outFile);
+							}
+						} else if (languages.size() > 0) {
+							File outFile = new File(outDir, child.getName());
+							generateFile(child, languages.iterator().next(), outFile);
+						} else {
+							File outFile = new File(outDir, child.getName());
+							generateFile(child, "default", outFile);
 						}
-					} else if (languages.size() > 0) {
-						File outFile = new File(outDir, child.getName());
-						generateFile(child, languages.iterator().next(), outFile);
-					} else {
-						File outFile = new File(outDir, child.getName());
-						generateFile(child, "default", outFile);
 					}
 				}
 			}
@@ -188,8 +185,8 @@ public class Generator implements Runnable, TemplateLoader {
 			
 			// Set default values
 			rc.put("languageKey", language);
-			rc.put("runDate", DATE_FORMATTER.format(generationTime));
-			rc.put("runTime", TIME_FORMATTER.format(generationTime));
+			rc.put("runDate", DATE_FORMATTER.format(config.getGenerationTime()));
+			rc.put("runTime", TIME_FORMATTER.format(config.getGenerationTime()));
 
 			mergedLocalizations.put(language, rc);
 		}
@@ -205,7 +202,7 @@ public class Generator implements Runnable, TemplateLoader {
 		if (tDir.exists() && tDir.isDirectory() && tDir.canRead()) {
 			for (File child : tDir.listFiles()) {
 				if (child.isFile() && child.canRead() && Project.isValidFile(child)) {
-					templates.setProperty(child.getName(), FileReadUtils.readFile(child, readEncoding));
+					templates.setProperty(child.getName(), FileReadUtils.readFile(child, config.getReadEncoding()));
 				}
 			}
 		}
@@ -237,7 +234,7 @@ public class Generator implements Runnable, TemplateLoader {
 				if (child.isFile() && child.canRead() && Project.isValidFile(child)) {
 					String language = FilenameUtils.getBaseName(child.getName());
 					Properties values = new Properties();
-					values.load(FileReadUtils.getReader(child, this.readEncoding));
+					values.load(FileReadUtils.getReader(child, config.getReadEncoding()));
 
 					// Add overrides to existing
 					Properties my = localization.get(language);
@@ -334,7 +331,7 @@ public class Generator implements Runnable, TemplateLoader {
 	@Override
 	public Reader getReader(Object templateSource, String encoding) throws IOException {
 		if (templateSource instanceof File) {
-			return FileReadUtils.getReader((File)templateSource, readEncoding);
+			return FileReadUtils.getReader((File)templateSource, config.getReadEncoding());
 		}
 		return new StringReader(getTemplate(templateSource.toString()));
 	}

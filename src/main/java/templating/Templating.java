@@ -70,6 +70,17 @@ public class Templating {
 					log.info("Moved existing putput directory to "+oldDir.getAbsolutePath());
 				}
 			}
+			TemplatingConfig cfg = new TemplatingConfig(projectDirFile, outDirFile, generationTime);
+			
+			// The subdir if it exists
+			String subDir   = cl.getOptionValue("s");
+			if (subDir != null) {
+				File subDirFile = new File(projectDirFile, subDir);
+				if (!subDirFile.exists() || !subDirFile.isDirectory()) {
+					throw new TemplatingException("Sub-directory "+subDirFile.getCanonicalPath()+" does not exist");
+				}
+				cfg.setSubDir(subDirFile);
+			}
 			
 			// Reading encoding
 			String readEncodingName = Charset.defaultCharset().name();
@@ -77,6 +88,7 @@ public class Templating {
 				readEncodingName = cl.getOptionValue("r");
 			}
 			Charset readEncoding = Charset.forName(readEncodingName);
+			cfg.setReadEncoding(readEncoding);
 			
 			// Writing encoding
 			String writeEncodingName = Charset.defaultCharset().name();
@@ -84,11 +96,10 @@ public class Templating {
 				writeEncodingName = cl.getOptionValue("w");
 			}
 			Charset writeEncoding = Charset.forName(writeEncodingName);
+			cfg.setWriteEncoding(writeEncoding);
 			
 			// Now the project
-			Project project     = new Project(projectDirFile, outDirFile, generationTime);
-			project.setReadEncoding(readEncoding);
-			project.setWriteEncoding(writeEncoding);
+			Project project = new Project(cfg);
 			
 			// And run...
 			project.generate();
@@ -114,6 +125,11 @@ public class Templating {
 		rc.addOption(option);
 
 		option = new Option("o", "output-dir", true, "output directory (optional)");
+		option.setRequired(false);
+		option.setArgs(1);
+		rc.addOption(option);
+
+		option = new Option("s", "sub-dir", true, "sub directory to generate within project (optional)");
 		option.setRequired(false);
 		option.setArgs(1);
 		rc.addOption(option);
