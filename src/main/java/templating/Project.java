@@ -2,6 +2,7 @@ package templating;
 
 import java.io.File;
 import java.nio.charset.Charset;
+import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,15 +19,17 @@ public class Project {
 	
 	protected File    projectRoot;
 	protected File    outRoot;
+	protected Date    generationTime;
 	protected Charset readEncoding  = Charset.defaultCharset();
 	protected Charset writeEncoding = Charset.defaultCharset();
 	
 	/**
 	 * Constructor.
 	 */
-	public Project(File projectRoot, File outRoot) {
-		this.projectRoot = projectRoot;
-		this.outRoot     = outRoot;
+	public Project(File projectRoot, File outRoot, Date generationTime) {
+		this.projectRoot    = projectRoot;
+		this.outRoot        = outRoot;
+		this.generationTime = generationTime;
 	}
 
 	/**
@@ -89,7 +92,7 @@ public class Project {
 	 */
 	protected void generateRecursively(Generator parent, File dir, File outDir) {
 		// Create the generator
-		Generator generator = new Generator(parent, dir, outDir, readEncoding, writeEncoding);
+		Generator generator = new Generator(parent, dir, outDir, readEncoding, writeEncoding, generationTime);
 		generator.run();
 		for (File child : dir.listFiles()) {
 			if (!child.getName().startsWith("__") && child.isDirectory() && child.canRead()) {

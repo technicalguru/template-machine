@@ -5,7 +5,6 @@ package templating;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -39,26 +38,28 @@ public class Templating {
 	 */
 	public static void main(String[] args) {
 		try {
+			Date generationTime      = new Date();
+
 			// Parse the command line
 			CommandLineParser parser = new DefaultParser();
-			CommandLine cl = parser.parse(getCommandLineOptions(), args);
-
+			CommandLine cl           = parser.parse(getCommandLineOptions(), args);
+			
 			// The template directory
 			String projectDir   = cl.getOptionValue("t");
-			File projectDirFile = new File(new URI(projectDir));
+			File projectDirFile = new File(projectDir);
 			if (!projectDirFile.isDirectory() || !projectDirFile.canRead()) throw new FileNotFoundException("Cannot read "+projectDir);
 			
 			// The output directory
 			String outDir   = cl.getOptionValue("o");
 			if (outDir == null) {
 				// Generating the output folder name
-				String datetime = DATETIMEBUILDER.format(new Date());
+				String datetime = DATETIMEBUILDER.format(generationTime);
 				outDir = projectDir+"-"+datetime;
 				
 			}
 			
 			// Handle any existing output directory
-			File outDirFile = new File(new URI(outDir));
+			File outDirFile = new File(outDir);
 			if (outDirFile.exists()) {
 				if (!cl.hasOption("f")) {
 					throw new TemplatingException("Output directory already exists. Use -f option to force overwriting");
@@ -85,7 +86,7 @@ public class Templating {
 			Charset writeEncoding = Charset.forName(writeEncodingName);
 			
 			// Now the project
-			Project project     = new Project(projectDirFile, outDirFile);
+			Project project     = new Project(projectDirFile, outDirFile, generationTime);
 			project.setReadEncoding(readEncoding);
 			project.setWriteEncoding(writeEncoding);
 			
