@@ -1,7 +1,7 @@
 Testfile dir-12:
 ----------------
 value1: expected: TBD               actual: ${value1}
-value2: expected: TBD               actual: ${value2}
+value2: expected: /de.value2        actual: ${value2}
 value3: expected: TBD               actual: ${value3}
 value4: expected: TBD               actual: ${value4}
 value5: expected: TBD               actual: ${value5}
