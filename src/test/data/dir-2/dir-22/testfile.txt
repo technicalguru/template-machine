@@ -1,6 +1,7 @@
 # Testfile dir-22:
 ##################
 <#import "template.ftl" as template>
+<#import "sub/template.ftl" as subtemplate>
 
 # value1 should be the local value
 value1: expected: /dir-22/de.value1      actual: ${value1}
@@ -22,3 +23,6 @@ value6: expected: /dir-2/de.value6       actual: ${value6}
 
 # value7 should be the global template value
 <@template.templateValue name="value7" expected="/template.ftl" />
+
+# value8 should be the global subtemplate value
+<@subtemplate.templateValue name="value8" expected="/sub/template.ftl" />

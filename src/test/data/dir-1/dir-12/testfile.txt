@@ -1,6 +1,7 @@
 # Testfile dir-12:
 ##################
 <#import "template.ftl" as template />
+<#import "sub/template.ftl" as subtemplate>
 
 # value1 should be the local value
 value1: expected: /dir-12/de.value1      actual: ${value1}
@@ -22,3 +23,6 @@ value6: expected: /dir-1/de.value6       actual: ${value6}
 
 # value7 should be the parent template value
 <@template.templateValue name="value7" expected="/dir-1/template.ftl" />
+
+# value8 should be the parent subtemplate value
+<@subtemplate.templateValue name="value8" expected="/dir-1/sub/template.ftl" />

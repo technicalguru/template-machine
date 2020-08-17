@@ -195,7 +195,7 @@ public class Generator implements Runnable, TemplateLoader {
 
 	/**
 	 * Override parent definitions of templates.
-	 * @throws IOException when the templates cannot be read
+	 * @throws IOException - when the templates cannot be read
 	 */
 	protected void loadLocalTemplates() throws IOException {
 		File tDir = new File(dir, "__templates");
@@ -203,11 +203,29 @@ public class Generator implements Runnable, TemplateLoader {
 			for (File child : tDir.listFiles()) {
 				if (child.isFile() && child.canRead() && Project.isValidFile(child)) {
 					templates.setProperty(child.getName(), FileReadUtils.readFile(child, config.getReadEncoding()));
+				} else if (child.isDirectory() && child.canRead()) {
+					loadLocalSubTemplates(child.getName(), child);
 				}
 			}
 		}
 	}
 
+	/**
+	 * Load recursively templates in subfolders.
+	 * @param namePrefix  - the prefix of the template name (name of folder)
+	 * @param dir         - the folder to read
+	 * @throws IOException - when the template cannot be read
+	 */
+	protected void loadLocalSubTemplates(String namePrefix, File dir) throws IOException {
+		for (File child : dir.listFiles()) {
+			if (child.isFile() && child.canRead() && Project.isValidFile(child)) {
+				templates.setProperty(namePrefix+"/"+child.getName(), FileReadUtils.readFile(child, config.getReadEncoding()));
+			} else if (child.isDirectory()) {
+				loadLocalSubTemplates(namePrefix+"/"+child.getName(), child);
+			}
+		}
+	}
+	
 	/**
 	 * Override parent localization values.
 	 * @throws IOException the the localization files cannot be read
