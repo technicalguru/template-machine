@@ -68,6 +68,7 @@ public class Generator implements Runnable, TemplateLoader {
 		templateConfig.setWrapUncheckedExceptions(true);
 		templateConfig.setFallbackOnNullLoopVariable(false);
 		templateConfig.setSharedVariable("quotedPrintable", new Rfc1342Directive());
+		templateConfig.setSharedVariable("qp", new Rfc1342Directive());
 	}
 
 	/**

@@ -5,9 +5,9 @@ package templating.util;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import org.apache.commons.codec.Charsets;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.QuotedPrintableCodec;
 
@@ -62,7 +62,7 @@ public class Rfc1342Directive implements TemplateDirectiveModel {
 
 		Rfc1342FilterWriter(Writer out) {
 			this.out      = out;
-			codec         = new QuotedPrintableCodec(Charsets.UTF_8);
+			codec         = new QuotedPrintableCodec(StandardCharsets.UTF_8, true);
 		}
 
 		public void start() throws IOException {
@@ -75,7 +75,8 @@ public class Rfc1342Directive implements TemplateDirectiveModel {
 
 		public void write(char[] cbuf, int off, int len) throws IOException {
 			try {
-				out.write(codec.encode(new String(cbuf, off, len)));
+				String words = codec.encode(new String(cbuf, off, len));
+				out.write(words.replace(" ", "_"));
 			} catch (EncoderException e) {
 				throw new IOException("Cannot encode", e);
 			}

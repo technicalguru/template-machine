@@ -26,3 +26,6 @@ value6: expected: /dir-1/de.value6       actual: ${value6}
 
 # value8 should be the parent subtemplate value
 <@subtemplate.templateValue name="value8" expected="/dir-1/sub/template.ftl" />
+
+# Test the quoted-printable function
+value8: expected: =?UTF-8?Q?H=C3=A4tte_ich_=C3=A9s_=C3=A8vel?=  actual: <@qp>Hätte ich és èvel</@qp>
