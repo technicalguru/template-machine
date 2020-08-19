@@ -23,6 +23,7 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 import templating.util.FileReadUtils;
+import templating.util.Rfc1342Directive;
 
 /**
  * Generates all files in a directory (not recursively!)
@@ -66,6 +67,7 @@ public class Generator implements Runnable, TemplateLoader {
 		templateConfig.setLogTemplateExceptions(false);
 		templateConfig.setWrapUncheckedExceptions(true);
 		templateConfig.setFallbackOnNullLoopVariable(false);
+		templateConfig.setSharedVariable("quotedPrintable", new Rfc1342Directive());
 	}
 
 	/**
