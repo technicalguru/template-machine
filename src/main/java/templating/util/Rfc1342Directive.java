@@ -25,6 +25,22 @@ import freemarker.template.TemplateModelException;
  */
 public class Rfc1342Directive implements TemplateDirectiveModel {
 
+	private boolean strict = true;
+	
+	/**
+	 * Constructor for strict encoding.
+	 */
+	public Rfc1342Directive() {
+		this(true);
+	}
+
+	/**
+	 * Constructor.
+	 * @param strict - use strict encoding
+	 */
+	public Rfc1342Directive(boolean strict) {
+		this.strict = strict;
+	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -41,7 +57,7 @@ public class Rfc1342Directive implements TemplateDirectiveModel {
 		if (body != null) {
 			// Executes the nested body. Same as <#nested> in FTL, except
 			// that we use our own writer instead of the current output writer.
-			Rfc1342FilterWriter writer = new Rfc1342FilterWriter(env.getOut());
+			Rfc1342FilterWriter writer = new Rfc1342FilterWriter(env.getOut(), strict);
 			writer.start();
 			body.render(writer);
 			writer.end();
@@ -60,9 +76,9 @@ public class Rfc1342Directive implements TemplateDirectiveModel {
 		private Writer out;
 		private QuotedPrintableCodec codec;
 
-		Rfc1342FilterWriter(Writer out) {
+		Rfc1342FilterWriter(Writer out, boolean strict) {
 			this.out      = out;
-			codec         = new QuotedPrintableCodec(StandardCharsets.UTF_8, true);
+			codec         = new QuotedPrintableCodec(StandardCharsets.UTF_8, strict);
 		}
 
 		public void start() throws IOException {
@@ -75,7 +91,8 @@ public class Rfc1342Directive implements TemplateDirectiveModel {
 
 		public void write(char[] cbuf, int off, int len) throws IOException {
 			try {
-				String words = codec.encode(new String(cbuf, off, len));
+				String orig = new String(cbuf, off, len);
+				String words = codec.encode(orig);
 				out.write(words.replace(" ", "_"));
 			} catch (EncoderException e) {
 				throw new IOException("Cannot encode", e);

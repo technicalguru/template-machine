@@ -34,7 +34,7 @@ public class Generator implements Runnable, TemplateLoader {
 
 	/** The logger */
 	public static Logger log = LoggerFactory.getLogger(Generator.class);
-
+	
 	private static SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd/MM/yyyy");
 	private static SimpleDateFormat TIME_FORMATTER = new SimpleDateFormat("HH:mm:ss");
 
@@ -67,8 +67,8 @@ public class Generator implements Runnable, TemplateLoader {
 		templateConfig.setLogTemplateExceptions(false);
 		templateConfig.setWrapUncheckedExceptions(true);
 		templateConfig.setFallbackOnNullLoopVariable(false);
-		templateConfig.setSharedVariable("quotedPrintable", new Rfc1342Directive());
-		templateConfig.setSharedVariable("qp", new Rfc1342Directive());
+		templateConfig.setSharedVariable("quotedPrintable", new Rfc1342Directive(false));
+		templateConfig.setSharedVariable("qp", new Rfc1342Directive(false));
 	}
 
 	/**
@@ -136,7 +136,7 @@ public class Generator implements Runnable, TemplateLoader {
 		log.info("Generating "+outFile.getPath()+"...");
 		// Ensure the parent dir exists
 		FileUtils.forceMkdirParent(outFile);
-		
+
 		// Prepare localization
 		Map<String,String> localization = getMergedLanguage(language);
 		localization.put("templateAbsPath", templateFile.getCanonicalPath());

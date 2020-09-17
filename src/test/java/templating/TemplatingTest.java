@@ -32,7 +32,7 @@ import org.junit.runners.Parameterized.Parameters;
 public class TemplatingTest {
 
 	public static File TEMPLATE_DIR = new File("src/test/data");
-	public static File TARGET_DIR   = new File("target/data");
+	public static File TARGET_DIR   = new File("target/data2");
 	public static Charset ENCODING  = Charset.forName("UTF-8");
 	
 	// value1: expected: TBD               actual: ${value1}

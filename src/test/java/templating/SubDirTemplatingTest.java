@@ -44,6 +44,7 @@ public class SubDirTemplatingTest {
 	 * Generate the test.
 	 */
 	public static void generateValues() throws IOException {
+		System.out.println("Doing it the second time");
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
 		TemplatingConfig cfg = new TemplatingConfig(TEMPLATE_DIR, TARGET_DIR, new Date());
 		cfg.setReadEncoding(ENCODING);
