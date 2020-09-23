@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>eu.ralph-schuster</groupId>
-	<artifactId>templating2</artifactId>
+	<artifactId>template-machine</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
-	<name>templating</name>
+	<name>template-machine</name>
 	<description>Templating engines for files</description>
-	<url>https://github.com/technicalguru/templating</url>
+	<url>https://github.com/technicalguru/template-machine</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -18,9 +18,9 @@
 	</properties>
 
 	<scm>
-		<connection>scm:git:https://github.com/technicalguru/templating.git</connection>
-		<developerConnection>scm:git:https://github.com/technicalguru/templating.git</developerConnection>
-		<url>https://github.com/technicalguru/templating</url>
+		<connection>scm:git:https://github.com/technicalguru/template-machine.git</connection>
+		<developerConnection>scm:git:https://github.com/technicalguru/template-machine.git</developerConnection>
+		<url>https://github.com/technicalguru/template-machine</url>
 		<tag>develop</tag>
 	</scm>
 

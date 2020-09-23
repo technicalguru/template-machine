@@ -8,7 +8,7 @@ else
         ROOTDIR=$(dirname "$BASEDIR")
 fi
 
-CLASSPATH=$(ls $ROOTDIR/templating-*.jar):$ROOTDIR/resources/
+CLASSPATH=$(ls $ROOTDIR/template-machine-*.jar):$ROOTDIR/resources/
 for file in $ROOTDIR/lib/*.jar
 do
         CLASSPATH=$CLASSPATH:$file
