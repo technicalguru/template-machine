@@ -1,7 +1,6 @@
 package templating;
 
 import java.io.File;
-import java.nio.charset.Charset;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,49 +15,13 @@ public class Project {
 	/** The logger */
 	public static Logger log = LoggerFactory.getLogger(Project.class);
 	
-	protected File    projectRoot;
-	protected File    outRoot;
-	protected Charset readEncoding  = Charset.defaultCharset();
-	protected Charset writeEncoding = Charset.defaultCharset();
+	protected TemplatingConfig templatingConfig;
 	
 	/**
 	 * Constructor.
 	 */
-	public Project(File projectRoot, File outRoot) {
-		this.projectRoot = projectRoot;
-		this.outRoot     = outRoot;
-	}
-
-	/**
-	 * Returns the encoding for reading templates and language files.
-	 * @return the readEncoding
-	 */
-	public Charset getReadEncoding() {
-		return readEncoding;
-	}
-
-	/**
-	 * Sets the encoding for reading templates and language files.
-	 * @param readEncoding the readEncoding to set
-	 */
-	public void setReadEncoding(Charset readEncoding) {
-		this.readEncoding = readEncoding;
-	}
-
-	/**
-	 * Returns the encoding for writing generated files.
-	 * @return the writeEncoding
-	 */
-	public Charset getWriteEncoding() {
-		return writeEncoding;
-	}
-
-	/**
-	 * Sets the encoding for writing generated files.
-	 * @param writeEncoding the writeEncoding to set
-	 */
-	public void setWriteEncoding(Charset writeEncoding) {
-		this.writeEncoding = writeEncoding;
+	public Project(TemplatingConfig templatingConfig) {
+		this.templatingConfig = templatingConfig;
 	}
 
 	/**
@@ -66,15 +29,15 @@ public class Project {
 	 */
 	public void generate() {
 		try {
-			log.info("Generating project "+projectRoot+"...");
+			log.info("Generating project "+templatingConfig.getProjectRoot()+"...");
 			
 			// Encoding
-			System.setProperty("file.encoding", readEncoding.name());
+			System.setProperty("file.encoding", templatingConfig.getReadEncoding().name());
 
 			// Recursively dive into the folder and generate the templates
-			generateRecursively(null, projectRoot, outRoot);
+			generateRecursively(null, templatingConfig.getProjectRoot(), templatingConfig.getOutRoot());
 			
-			log.info("You will find your generated files in "+outRoot);
+			log.info("You will find your generated files in "+templatingConfig.getOutRoot());
 		} finally {
 			log.info("Done");
 			
@@ -84,16 +47,16 @@ public class Project {
 	/**
 	 * Generate recursively
 	 * @param parent - the parent generator to allow overriding templates and localizations
-	 * @param dir    - the directory to process
-	 * @param outDir - the output directory
+	 * @param sourceDir    - the directory to process
+	 * @param outputDir - the output directory
 	 */
-	protected void generateRecursively(Generator parent, File dir, File outDir) {
+	protected void generateRecursively(Generator parent, File sourceDir, File outputDir) {
 		// Create the generator
-		Generator generator = new Generator(parent, dir, outDir, readEncoding, writeEncoding);
+		Generator generator = new Generator(parent, new GeneratorConfig(sourceDir, outputDir, templatingConfig));
 		generator.run();
-		for (File child : dir.listFiles()) {
+		for (File child : sourceDir.listFiles()) {
 			if (!child.getName().startsWith("__") && child.isDirectory() && child.canRead()) {
-				generateRecursively(generator, child, new File(outDir, child.getName()));
+				generateRecursively(generator, child, new File(outputDir, child.getName()));
 			}
 		}
 	}

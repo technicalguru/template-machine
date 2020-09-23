@@ -1,0 +1,28 @@
+# Testfile dir-22:
+##################
+<#import "template.ftl" as template>
+<#import "sub/template.ftl" as subtemplate>
+
+# value1 should be the local value
+value1: expected: /dir-22/de.value1      actual: ${value1}
+
+# value2 should be the global language default
+value2: expected: /de.value2             actual: ${value2}
+
+# value3 should be the global default
+value3: expected: /default.value3        actual: ${value3}
+
+# value4 should be the local default
+value4: expected: /dir-22/default.value4 actual: ${value4}
+
+# value5 should be the parent default
+value5: expected: /dir-2/default.value5  actual: ${value5}
+
+# value6 should be the parent language default
+value6: expected: /dir-2/de.value6       actual: ${value6}
+
+# value7 should be the global template value
+<@template.templateValue name="value7" expected="/template.ftl" />
+
+# value8 should be the global subtemplate value
+<@subtemplate.templateValue name="value8" expected="/sub/template.ftl" />
