@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>eu.ralph-schuster</groupId>
-	<artifactId>templating</artifactId>
+	<artifactId>template-machine</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<name>template-machine</name>
 	<description>Templating engines for files</description>
