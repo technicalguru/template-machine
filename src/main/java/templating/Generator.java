@@ -39,36 +39,31 @@ public class Generator implements Runnable, TemplateLoader {
 	private static SimpleDateFormat TIME_FORMATTER = new SimpleDateFormat("HH:mm:ss");
 
 	protected Generator                      parent;
-	protected File                           dir;
-	protected File                           outDir;
-	protected TemplatingConfig               config;
-	
+	protected GeneratorConfig                generatorConfig;
 	protected Properties                     templates;
 	protected Map<String,Properties>         localization;
 	protected Map<String,Map<String,String>> mergedLocalizations;
-	protected Configuration                  templateConfig;
+	protected Configuration                  freemarkerConfig;
 	protected long                           lastModified;
 
 	/**
 	 * Constructor.
 	 */
-	public Generator(Generator parent, File dir, File outDir, TemplatingConfig config) {
-		this.parent         = parent;
-		this.dir            = dir;
-		this.outDir         = outDir;
-		this.config         = config;
-		this.lastModified   = System.currentTimeMillis();
+	public Generator(Generator parent, GeneratorConfig generatorConfig) {
+		this.parent           = parent;
+		this.generatorConfig  = generatorConfig;
+		this.lastModified     = System.currentTimeMillis();
 
 		// FreeMarker configuration is always specific to directory.
-		templateConfig = new Configuration(Configuration.VERSION_2_3_29);
-		templateConfig.setTemplateLoader(this);
-		templateConfig.setDefaultEncoding("UTF-8");
-		templateConfig.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-		templateConfig.setLogTemplateExceptions(false);
-		templateConfig.setWrapUncheckedExceptions(true);
-		templateConfig.setFallbackOnNullLoopVariable(false);
-		templateConfig.setSharedVariable("quotedPrintable", new Rfc1342Directive(false));
-		templateConfig.setSharedVariable("qp", new Rfc1342Directive(false));
+		freemarkerConfig = new Configuration(Configuration.VERSION_2_3_29);
+		freemarkerConfig.setTemplateLoader(this);
+		freemarkerConfig.setDefaultEncoding("UTF-8");
+		freemarkerConfig.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+		freemarkerConfig.setLogTemplateExceptions(false);
+		freemarkerConfig.setWrapUncheckedExceptions(true);
+		freemarkerConfig.setFallbackOnNullLoopVariable(false);
+		freemarkerConfig.setSharedVariable("quotedPrintable", new Rfc1342Directive(false));
+		freemarkerConfig.setSharedVariable("qp", new Rfc1342Directive(false));
 	}
 
 	/**
@@ -87,29 +82,29 @@ public class Generator implements Runnable, TemplateLoader {
 			loadLocalLocalization();
 
 			// Do only when we are in sub-folder (if configured)
-			if ((config.getSubDir() == null) || config.getSubDir().equals(dir) || FileUtils.directoryContains(config.getSubDir(), dir)) {
+			if ((generatorConfig.templatingConfig.getSubDir() == null) || generatorConfig.templatingConfig.getSubDir().equals(generatorConfig.sourceDir) || FileUtils.directoryContains(generatorConfig.templatingConfig.getSubDir(), generatorConfig.sourceDir)) {
 				// Process each file now with each language
-				for (File child : dir.listFiles()) {
+				for (File child : generatorConfig.sourceDir.listFiles()) {
 					if (!child.getName().startsWith("__") && Project.isValidFile(child) && child.isFile() && child.canRead()) {
 						// Now for each language
 						Set<String> languages = getLanguages();
 						if (languages.size() > 1) {
 							for (String language : languages) {
-								File outFile = new File(new File(outDir, language), child.getName());
+								File outFile = new File(new File(generatorConfig.outputDir, language), child.getName());
 								generateFile(child, language, outFile);
 							}
 						} else if (languages.size() > 0) {
-							File outFile = new File(outDir, child.getName());
+							File outFile = new File(generatorConfig.outputDir, child.getName());
 							generateFile(child, languages.iterator().next(), outFile);
 						} else {
-							File outFile = new File(outDir, child.getName());
+							File outFile = new File(generatorConfig.outputDir, child.getName());
 							generateFile(child, "default", outFile);
 						}
 					}
 				}
 			}
 		} catch (Throwable t) {
-			throw new TemplatingException("Cannot generate files in "+dir.getPath(), t);
+			throw new TemplatingException("Cannot generate files in "+generatorConfig.sourceDir.getPath(), t);
 		}
 	}
 
@@ -143,7 +138,7 @@ public class Generator implements Runnable, TemplateLoader {
 		localization.put("templateRelPath", getRelativePath(templateFile));
 
 		// Generate
-		Template temp = templateConfig.getTemplate(templateFile.getName());
+		Template temp = freemarkerConfig.getTemplate(templateFile.getName());
 		temp.process(localization, new FileWriter(outFile));
 	}
 
@@ -188,8 +183,8 @@ public class Generator implements Runnable, TemplateLoader {
 			
 			// Set default values
 			rc.put("languageKey", language);
-			rc.put("runDate", DATE_FORMATTER.format(config.getGenerationTime()));
-			rc.put("runTime", TIME_FORMATTER.format(config.getGenerationTime()));
+			rc.put("runDate", DATE_FORMATTER.format(generatorConfig.templatingConfig.getGenerationTime()));
+			rc.put("runTime", TIME_FORMATTER.format(generatorConfig.templatingConfig.getGenerationTime()));
 
 			mergedLocalizations.put(language, rc);
 		}
@@ -201,11 +196,11 @@ public class Generator implements Runnable, TemplateLoader {
 	 * @throws IOException - when the templates cannot be read
 	 */
 	protected void loadLocalTemplates() throws IOException {
-		File tDir = new File(dir, "__templates");
+		File tDir = new File(generatorConfig.sourceDir, "__templates");
 		if (tDir.exists() && tDir.isDirectory() && tDir.canRead()) {
 			for (File child : tDir.listFiles()) {
 				if (child.isFile() && child.canRead() && Project.isValidFile(child)) {
-					templates.setProperty(child.getName(), FileReadUtils.readFile(child, config.getReadEncoding()));
+					templates.setProperty(child.getName(), FileReadUtils.readFile(child, generatorConfig.templatingConfig.getReadEncoding()));
 				} else if (child.isDirectory() && child.canRead()) {
 					loadLocalSubTemplates(child.getName(), child);
 				}
@@ -222,7 +217,7 @@ public class Generator implements Runnable, TemplateLoader {
 	protected void loadLocalSubTemplates(String namePrefix, File dir) throws IOException {
 		for (File child : dir.listFiles()) {
 			if (child.isFile() && child.canRead() && Project.isValidFile(child)) {
-				templates.setProperty(namePrefix+"/"+child.getName(), FileReadUtils.readFile(child, config.getReadEncoding()));
+				templates.setProperty(namePrefix+"/"+child.getName(), FileReadUtils.readFile(child, generatorConfig.templatingConfig.getReadEncoding()));
 			} else if (child.isDirectory()) {
 				loadLocalSubTemplates(namePrefix+"/"+child.getName(), child);
 			}
@@ -249,13 +244,13 @@ public class Generator implements Runnable, TemplateLoader {
 		}
 
 		// Load the local overrides
-		File tDir = new File(dir, "__localization");
+		File tDir = new File(generatorConfig.sourceDir, "__localization");
 		if (tDir.exists() && tDir.isDirectory() && tDir.canRead()) {
 			for (File child : tDir.listFiles()) {
 				if (child.isFile() && child.canRead() && Project.isValidFile(child)) {
 					String language = FilenameUtils.getBaseName(child.getName());
 					Properties values = new Properties();
-					values.load(FileReadUtils.getReader(child, config.getReadEncoding()));
+					values.load(FileReadUtils.getReader(child, generatorConfig.templatingConfig.getReadEncoding()));
 
 					// Add overrides to existing
 					Properties my = localization.get(language);
@@ -316,7 +311,7 @@ public class Generator implements Runnable, TemplateLoader {
 	protected String getRelativePath(File file) throws IOException {
 		String path = "";
 		if (parent != null) {
-			path = parent.getRelativePath(dir) + File.separator;
+			path = parent.getRelativePath(generatorConfig.sourceDir) + File.separator;
 		}
 		return path + file.getName();
 	}
@@ -328,7 +323,7 @@ public class Generator implements Runnable, TemplateLoader {
 	public Object findTemplateSource(String name) throws IOException {
 		if (templates.getProperty(name) == null) {
 			// Exception: the template is the local file
-			File f = new File(dir, name);
+			File f = new File(generatorConfig.sourceDir, name);
 			if (f.exists() && f.isFile() && f.canRead()) {
 				return f;
 			}
@@ -352,7 +347,7 @@ public class Generator implements Runnable, TemplateLoader {
 	@Override
 	public Reader getReader(Object templateSource, String encoding) throws IOException {
 		if (templateSource instanceof File) {
-			return FileReadUtils.getReader((File)templateSource, config.getReadEncoding());
+			return FileReadUtils.getReader((File)templateSource, generatorConfig.templatingConfig.getReadEncoding());
 		}
 		return new StringReader(getTemplate(templateSource.toString()));
 	}

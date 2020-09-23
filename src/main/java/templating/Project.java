@@ -15,13 +15,13 @@ public class Project {
 	/** The logger */
 	public static Logger log = LoggerFactory.getLogger(Project.class);
 	
-	protected TemplatingConfig config;
+	protected TemplatingConfig templatingConfig;
 	
 	/**
 	 * Constructor.
 	 */
-	public Project(TemplatingConfig config) {
-		this.config = config;
+	public Project(TemplatingConfig templatingConfig) {
+		this.templatingConfig = templatingConfig;
 	}
 
 	/**
@@ -29,15 +29,15 @@ public class Project {
 	 */
 	public void generate() {
 		try {
-			log.info("Generating project "+config.getProjectRoot()+"...");
+			log.info("Generating project "+templatingConfig.getProjectRoot()+"...");
 			
 			// Encoding
-			System.setProperty("file.encoding", config.getReadEncoding().name());
+			System.setProperty("file.encoding", templatingConfig.getReadEncoding().name());
 
 			// Recursively dive into the folder and generate the templates
-			generateRecursively(null, config.getProjectRoot(), config.getOutRoot());
+			generateRecursively(null, templatingConfig.getProjectRoot(), templatingConfig.getOutRoot());
 			
-			log.info("You will find your generated files in "+config.getOutRoot());
+			log.info("You will find your generated files in "+templatingConfig.getOutRoot());
 		} finally {
 			log.info("Done");
 			
@@ -47,16 +47,16 @@ public class Project {
 	/**
 	 * Generate recursively
 	 * @param parent - the parent generator to allow overriding templates and localizations
-	 * @param dir    - the directory to process
-	 * @param outDir - the output directory
+	 * @param sourceDir    - the directory to process
+	 * @param outputDir - the output directory
 	 */
-	protected void generateRecursively(Generator parent, File dir, File outDir) {
+	protected void generateRecursively(Generator parent, File sourceDir, File outputDir) {
 		// Create the generator
-		Generator generator = new Generator(parent, dir, outDir, config);
+		Generator generator = new Generator(parent, new GeneratorConfig(sourceDir, outputDir, templatingConfig));
 		generator.run();
-		for (File child : dir.listFiles()) {
+		for (File child : sourceDir.listFiles()) {
 			if (!child.getName().startsWith("__") && child.isDirectory() && child.canRead()) {
-				generateRecursively(generator, child, new File(outDir, child.getName()));
+				generateRecursively(generator, child, new File(outputDir, child.getName()));
 			}
 		}
 	}
