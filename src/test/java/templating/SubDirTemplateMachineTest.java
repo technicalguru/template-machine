@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,12 +26,12 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 /**
- * Tests the Templating features with a sub dir only.
+ * Tests the TemplateMachine features with a sub dir only.
  * @author ralph
  *
  */
 @RunWith(Parameterized.class)
-public class SubDirTemplatingTest {
+public class SubDirTemplateMachineTest {
 
 	public static File TEMPLATE_DIR = new File("src/test/data");
 	public static File SUB_DIR = new File(TEMPLATE_DIR, "dir-1");
@@ -46,7 +47,7 @@ public class SubDirTemplatingTest {
 	public static void generateValues() throws IOException {
 		System.out.println("Doing it the second time");
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
-		TemplatingConfig cfg = new TemplatingConfig(TEMPLATE_DIR, TARGET_DIR, new Date());
+		TemplateMachineConfig cfg = new TemplateMachineConfig(TEMPLATE_DIR, TARGET_DIR, new Properties(), new Date());
 		cfg.setReadEncoding(ENCODING);
 		cfg.setWriteEncoding(ENCODING);
 		cfg.setSubDir(SUB_DIR);
@@ -111,7 +112,7 @@ public class SubDirTemplatingTest {
 	 * Constructor for parameterized test.
 	 * @param testCase - the test case
 	 */
-	public SubDirTemplatingTest(ValueTest testCase) {
+	public SubDirTemplateMachineTest(ValueTest testCase) {
 		this.testCase = testCase;
 	}
 	

@@ -11,7 +11,7 @@ public class GeneratorConfig {
 
 	protected File sourceDir;
 	protected File outputDir;
-	protected TemplatingConfig templatingConfig;
+	protected TemplateMachineConfig templateMachineConfig;
 	
 	/**
 	 * Constructor.
@@ -23,12 +23,12 @@ public class GeneratorConfig {
 	 * Constructor.
 	 * @param sourceDir        - the template source dir
 	 * @param outputDir        - the output dir for the generated files
-	 * @param templatingConfig - the templating config
+	 * @param templateMachineConfig - the templating config
 	 */
-	public GeneratorConfig(File sourceDir, File outputDir, TemplatingConfig templatingConfig) {
+	public GeneratorConfig(File sourceDir, File outputDir, TemplateMachineConfig templateMachineConfig) {
 		this.sourceDir = sourceDir;
 		this.outputDir = outputDir;
-		this.templatingConfig = templatingConfig;
+		this.templateMachineConfig = templateMachineConfig;
 	}
 
 
@@ -65,19 +65,19 @@ public class GeneratorConfig {
 	}
 
 	/**
-	 * Returns the templatingConfig.
-	 * @return the templatingConfig
+	 * Returns the templateMachineConfig.
+	 * @return the templateMachineConfig
 	 */
-	public TemplatingConfig getTemplatingConfig() {
-		return templatingConfig;
+	public TemplateMachineConfig getTemplatingConfig() {
+		return templateMachineConfig;
 	}
 
 	/**
-	 * Sets the templatingConfig.
-	 * @param templatingConfig - the templatingConfig to set
+	 * Sets the templateMachineConfig.
+	 * @param templateMachineConfig - the templateMachineConfig to set
 	 */
-	public void setTemplatingConfig(TemplatingConfig templatingConfig) {
-		this.templatingConfig = templatingConfig;
+	public void setTemplatingConfig(TemplateMachineConfig templateMachineConfig) {
+		this.templateMachineConfig = templateMachineConfig;
 	}
 
 	

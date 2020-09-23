@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,12 +25,12 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 /**
- * Tests the Templating features.
+ * Tests the TemplateMachine features.
  * @author ralph
  *
  */
 @RunWith(Parameterized.class)
-public class TemplatingTest {
+public class TemplateMachineTest {
 
 	public static File TEMPLATE_DIR = new File("src/test/data");
 	public static File TARGET_DIR   = new File("target/data2");
@@ -43,7 +44,7 @@ public class TemplatingTest {
 	 */
 	public static void generateValues() throws IOException {
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
-		TemplatingConfig cfg = new TemplatingConfig(TEMPLATE_DIR, TARGET_DIR, new Date());
+		TemplateMachineConfig cfg = new TemplateMachineConfig(TEMPLATE_DIR, TARGET_DIR, new Properties(), new Date());
 		cfg.setReadEncoding(ENCODING);
 		cfg.setWriteEncoding(ENCODING);
 		Project project = new Project(cfg);
@@ -107,7 +108,7 @@ public class TemplatingTest {
 	 * Constructor for parameterized test.
 	 * @param testCase - the test case
 	 */
-	public TemplatingTest(ValueTest testCase) {
+	public TemplateMachineTest(ValueTest testCase) {
 		this.testCase = testCase;
 	}
 	
