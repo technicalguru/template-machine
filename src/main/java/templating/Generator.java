@@ -85,7 +85,7 @@ public class Generator implements Runnable, TemplateLoader {
 			if ((generatorConfig.templateMachineConfig.getSubDir() == null) || generatorConfig.templateMachineConfig.getSubDir().equals(generatorConfig.sourceDir) || FileUtils.directoryContains(generatorConfig.templateMachineConfig.getSubDir(), generatorConfig.sourceDir)) {
 				// Process each file now with each language
 				for (File child : generatorConfig.sourceDir.listFiles()) {
-					if (!child.getName().startsWith("__") && isValidFile(child) && child.isFile() && child.canRead()) {
+					if (!generatorConfig.templateMachineConfig.isSpecialFile(child) && isValidFile(child) && child.isFile() && child.canRead()) {
 						// Now for each language
 						Set<String> languages = getLanguages();
 						if (languages.size() > 1) {

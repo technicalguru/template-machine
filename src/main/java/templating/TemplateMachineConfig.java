@@ -235,6 +235,18 @@ public class TemplateMachineConfig {
 	}
 
 	/**
+	 * Tests whether the file is any of the special files or directories in the config
+	 * @param file - the file to test
+	 * @return {@code true} when the file has a special meaning, {@code false} otherwise
+	 */
+	public boolean isSpecialFile(File file) {
+		if (file.getName().equals(getConfig("templateDir"))) return true;	
+		if (file.getName().equals(getConfig("localizationDir"))) return true;
+		if (file.equals(configFile)) return true;
+		return false;
+	}
+	
+	/**
 	 * Returns the default configuration.
 	 * @return the configuration defaults
 	 */

@@ -57,7 +57,7 @@ public class Project {
 		Generator generator = new Generator(parent, new GeneratorConfig(sourceDir, outputDir, templateMachineConfig));
 		generator.run();
 		for (File child : sourceDir.listFiles()) {
-			if (!child.getName().startsWith("__") && child.isDirectory() && child.canRead()) {
+			if (!templateMachineConfig.isSpecialFile(child) && child.isDirectory() && child.canRead()) {
 				generateRecursively(generator, child, new File(outputDir, child.getName()));
 			}
 		}
