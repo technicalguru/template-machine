@@ -241,7 +241,9 @@ public class TemplateMachineConfig {
 	public static Properties getDefaultConfig() {
 		if (defaultConfig == null) {
 			defaultConfig = new Properties();
-			defaultConfig.setProperty("languages", "auto");
+			defaultConfig.setProperty("languages",       "auto");
+			defaultConfig.setProperty("localizationDir", "__localization");
+			defaultConfig.setProperty("templateDir",     "__templates");
 		}
 		return defaultConfig;
 	}

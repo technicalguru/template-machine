@@ -196,7 +196,7 @@ public class Generator implements Runnable, TemplateLoader {
 	 * @throws IOException - when the templates cannot be read
 	 */
 	protected void loadLocalTemplates() throws IOException {
-		File tDir = new File(generatorConfig.sourceDir, "__templates");
+		File tDir = new File(generatorConfig.sourceDir, generatorConfig.templateMachineConfig.getConfig("templateDir"));
 		if (tDir.exists() && tDir.isDirectory() && tDir.canRead()) {
 			for (File child : tDir.listFiles()) {
 				if (child.isFile() && child.canRead() && isValidFile(child)) {
@@ -272,7 +272,7 @@ public class Generator implements Runnable, TemplateLoader {
 
 	protected void loadAutoLanguages() throws IOException {
 		// Load the local overrides
-		File tDir = new File(generatorConfig.sourceDir, "__localization");
+		File tDir = new File(generatorConfig.sourceDir, generatorConfig.templateMachineConfig.getConfig("localizationDir"));
 		if (tDir.exists() && tDir.isDirectory() && tDir.canRead()) {
 			for (File child : tDir.listFiles()) {
 				if (child.isFile() && child.canRead() && isValidFile(child)) {
@@ -284,7 +284,7 @@ public class Generator implements Runnable, TemplateLoader {
 	}
 
 	protected void loadLanguage(String languageKey, String sourceKey) throws IOException {
-		loadLanguage(languageKey, new File(new File(generatorConfig.sourceDir, "__localization"), sourceKey+".properties"));
+		loadLanguage(languageKey, new File(new File(generatorConfig.sourceDir, generatorConfig.templateMachineConfig.getConfig("localizationDir")), sourceKey+".properties"));
 	}
 	
 	protected void loadLanguage(String languageKey, File languageFile) throws IOException {
