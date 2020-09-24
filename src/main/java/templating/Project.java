@@ -15,13 +15,15 @@ public class Project {
 	/** The logger */
 	public static Logger log = LoggerFactory.getLogger(Project.class);
 	
-	protected TemplatingConfig templatingConfig;
+	protected TemplateMachineConfig templateMachineConfig;
+	protected ProjectInfo info;
 	
 	/**
 	 * Constructor.
 	 */
-	public Project(TemplatingConfig templatingConfig) {
-		this.templatingConfig = templatingConfig;
+	public Project(TemplateMachineConfig templateMachineConfig) {
+		this.templateMachineConfig = templateMachineConfig;
+		this.info                  = new ProjectInfo();
 	}
 
 	/**
@@ -29,15 +31,15 @@ public class Project {
 	 */
 	public void generate() {
 		try {
-			log.info("Generating project "+templatingConfig.getProjectRoot()+"...");
+			log.info("Generating project "+templateMachineConfig.getProjectRoot()+"...");
 			
 			// Encoding
-			System.setProperty("file.encoding", templatingConfig.getReadEncoding().name());
+			System.setProperty("file.encoding", templateMachineConfig.getReadEncoding().name());
 
 			// Recursively dive into the folder and generate the templates
-			generateRecursively(null, templatingConfig.getProjectRoot(), templatingConfig.getOutRoot());
+			generateRecursively(null, templateMachineConfig.getProjectRoot(), templateMachineConfig.getOutRoot());
 			
-			log.info("You will find your generated files in "+templatingConfig.getOutRoot());
+			log.info("You will find your generated files in "+templateMachineConfig.getOutRoot());
 		} finally {
 			log.info("Done");
 			
@@ -52,26 +54,13 @@ public class Project {
 	 */
 	protected void generateRecursively(Generator parent, File sourceDir, File outputDir) {
 		// Create the generator
-		Generator generator = new Generator(parent, new GeneratorConfig(sourceDir, outputDir, templatingConfig));
+		Generator generator = new Generator(parent, new GeneratorConfig(sourceDir, outputDir, templateMachineConfig));
 		generator.run();
 		for (File child : sourceDir.listFiles()) {
-			if (!child.getName().startsWith("__") && child.isDirectory() && child.canRead()) {
+			if (!templateMachineConfig.isSpecialFile(child) && child.isDirectory() && child.canRead()) {
 				generateRecursively(generator, child, new File(outputDir, child.getName()));
 			}
 		}
-	}
-	
-	/**
-	 * Returns true when a file (template or localization) can be used for templating.
-	 * <p>This is being used for .bak, ~ or .swap files (temporary and backup files).</p>
-	 * @param file - the file to be checked
-	 * @return {@code true} when file can be used in template reading
-	 */
-	public static boolean isValidFile(File file) {
-		String name = file.getName();
-		if (name.startsWith(".")) return false;
-		if (name.endsWith("~")) return false;
-		if (name.endsWith(".bak")) return false;
-		return true;
+		info.add(generator);	
 	}
 }

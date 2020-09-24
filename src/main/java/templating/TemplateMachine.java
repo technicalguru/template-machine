@@ -25,10 +25,10 @@ import org.slf4j.LoggerFactory;
  * @author ralph
  *
  */
-public class Templating {
+public class TemplateMachine {
 	
 	/** The logger */
-	public static Logger log = LoggerFactory.getLogger(Templating.class);
+	public static Logger log = LoggerFactory.getLogger(TemplateMachine.class);
 	
 	private static SimpleDateFormat DATETIMEBUILDER = new SimpleDateFormat("yyyyMMddHHmmss");
 	
@@ -70,7 +70,17 @@ public class Templating {
 					log.info("Moved existing putput directory to "+oldDir.getAbsolutePath());
 				}
 			}
-			TemplatingConfig cfg = new TemplatingConfig(projectDirFile, outDirFile, generationTime);
+			
+			// Read the configuration
+			String configFile        = cl.getOptionValue("c");
+			File   configFileFile    = new File(projectDirFile, "template-machine.properties");
+			if (configFile != null) {
+				configFileFile = new File(configFile);
+				if (!configFileFile.exists() || !configFileFile.isFile()) {
+					throw new TemplatingException(configFile+" does not exist");
+				}
+			}
+			TemplateMachineConfig cfg = new TemplateMachineConfig(projectDirFile, outDirFile, configFileFile, generationTime);
 			
 			// The subdir if it exists
 			String subDir   = cl.getOptionValue("s");
@@ -145,6 +155,11 @@ public class Templating {
 		rc.addOption(option);
 
 		option = new Option("w", "write-encoding", true, "encoding for generates files (optional, defaults to platform)");
+		option.setRequired(false);
+		option.setArgs(1);
+		rc.addOption(option);
+
+		option = new Option("c", "config", true, "configuration file (optional, defaults to template-machine.properties)");
 		option.setRequired(false);
 		option.setArgs(1);
 		rc.addOption(option);

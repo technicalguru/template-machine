@@ -14,5 +14,5 @@ do
         CLASSPATH=$CLASSPATH:$file
 done
 
-java -cp $CLASSPATH templating.Templating "$@"
+java -cp $CLASSPATH templating.TemplateMachine "$@"
 

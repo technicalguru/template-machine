@@ -34,7 +34,7 @@ public class Generator implements Runnable, TemplateLoader {
 
 	/** The logger */
 	public static Logger log = LoggerFactory.getLogger(Generator.class);
-	
+
 	private static SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd/MM/yyyy");
 	private static SimpleDateFormat TIME_FORMATTER = new SimpleDateFormat("HH:mm:ss");
 
@@ -82,10 +82,10 @@ public class Generator implements Runnable, TemplateLoader {
 			loadLocalLocalization();
 
 			// Do only when we are in sub-folder (if configured)
-			if ((generatorConfig.templatingConfig.getSubDir() == null) || generatorConfig.templatingConfig.getSubDir().equals(generatorConfig.sourceDir) || FileUtils.directoryContains(generatorConfig.templatingConfig.getSubDir(), generatorConfig.sourceDir)) {
+			if ((generatorConfig.templateMachineConfig.getSubDir() == null) || generatorConfig.templateMachineConfig.getSubDir().equals(generatorConfig.sourceDir) || FileUtils.directoryContains(generatorConfig.templateMachineConfig.getSubDir(), generatorConfig.sourceDir)) {
 				// Process each file now with each language
 				for (File child : generatorConfig.sourceDir.listFiles()) {
-					if (!child.getName().startsWith("__") && Project.isValidFile(child) && child.isFile() && child.canRead()) {
+					if (!generatorConfig.templateMachineConfig.isSpecialFile(child) && isValidFile(child) && child.isFile() && child.canRead()) {
 						// Now for each language
 						Set<String> languages = getLanguages();
 						if (languages.size() > 1) {
@@ -118,7 +118,7 @@ public class Generator implements Runnable, TemplateLoader {
 		// Ignore when the is a language specific template file
 		File langTemplate = new File(new File(templateFile.getParentFile(), language), templateFile.getName());
 		if (langTemplate.exists()) return;
-		
+
 		// Ignore when the template file is already language specific
 		String parentName = templateFile.getParentFile().getName();
 		if (languageExists(parentName)) {
@@ -127,7 +127,7 @@ public class Generator implements Runnable, TemplateLoader {
 			// But we need to change the output file
 			outFile = new File(outFile.getParentFile().getParentFile(), outFile.getName());
 		}
-		
+
 		log.info("Generating "+outFile.getPath()+"...");
 		// Ensure the parent dir exists
 		FileUtils.forceMkdirParent(outFile);
@@ -180,11 +180,11 @@ public class Generator implements Runnable, TemplateLoader {
 					rc.put((String)entry.getKey(), (String)entry.getValue());
 				}
 			}
-			
+
 			// Set default values
 			rc.put("languageKey", language);
-			rc.put("runDate", DATE_FORMATTER.format(generatorConfig.templatingConfig.getGenerationTime()));
-			rc.put("runTime", TIME_FORMATTER.format(generatorConfig.templatingConfig.getGenerationTime()));
+			rc.put("runDate", DATE_FORMATTER.format(generatorConfig.templateMachineConfig.getGenerationTime()));
+			rc.put("runTime", TIME_FORMATTER.format(generatorConfig.templateMachineConfig.getGenerationTime()));
 
 			mergedLocalizations.put(language, rc);
 		}
@@ -196,11 +196,11 @@ public class Generator implements Runnable, TemplateLoader {
 	 * @throws IOException - when the templates cannot be read
 	 */
 	protected void loadLocalTemplates() throws IOException {
-		File tDir = new File(generatorConfig.sourceDir, "__templates");
+		File tDir = new File(generatorConfig.sourceDir, generatorConfig.templateMachineConfig.getConfig("templateDir"));
 		if (tDir.exists() && tDir.isDirectory() && tDir.canRead()) {
 			for (File child : tDir.listFiles()) {
-				if (child.isFile() && child.canRead() && Project.isValidFile(child)) {
-					templates.setProperty(child.getName(), FileReadUtils.readFile(child, generatorConfig.templatingConfig.getReadEncoding()));
+				if (child.isFile() && child.canRead() && isValidFile(child)) {
+					templates.setProperty(child.getName(), FileReadUtils.readFile(child, generatorConfig.templateMachineConfig.getReadEncoding()));
 				} else if (child.isDirectory() && child.canRead()) {
 					loadLocalSubTemplates(child.getName(), child);
 				}
@@ -216,14 +216,14 @@ public class Generator implements Runnable, TemplateLoader {
 	 */
 	protected void loadLocalSubTemplates(String namePrefix, File dir) throws IOException {
 		for (File child : dir.listFiles()) {
-			if (child.isFile() && child.canRead() && Project.isValidFile(child)) {
-				templates.setProperty(namePrefix+"/"+child.getName(), FileReadUtils.readFile(child, generatorConfig.templatingConfig.getReadEncoding()));
+			if (child.isFile() && child.canRead() && isValidFile(child)) {
+				templates.setProperty(namePrefix+"/"+child.getName(), FileReadUtils.readFile(child, generatorConfig.templateMachineConfig.getReadEncoding()));
 			} else if (child.isDirectory()) {
 				loadLocalSubTemplates(namePrefix+"/"+child.getName(), child);
 			}
 		}
 	}
-	
+
 	/**
 	 * Override parent localization values.
 	 * @throws IOException the the localization files cannot be read
@@ -231,7 +231,7 @@ public class Generator implements Runnable, TemplateLoader {
 	protected void loadLocalLocalization() throws IOException {
 		localization = new HashMap<>();
 		mergedLocalizations = new HashMap<>();
-		
+
 		// Get a copy of all parent languages
 		if (parent != null) {
 			for (Map.Entry<String,Properties> entry : parent.getLocalization().entrySet()) {
@@ -243,26 +243,68 @@ public class Generator implements Runnable, TemplateLoader {
 			};
 		}
 
-		// Load the local overrides
-		File tDir = new File(generatorConfig.sourceDir, "__localization");
-		if (tDir.exists() && tDir.isDirectory() && tDir.canRead()) {
-			for (File child : tDir.listFiles()) {
-				if (child.isFile() && child.canRead() && Project.isValidFile(child)) {
-					String language = FilenameUtils.getBaseName(child.getName());
-					Properties values = new Properties();
-					values.load(FileReadUtils.getReader(child, generatorConfig.templatingConfig.getReadEncoding()));
-
-					// Add overrides to existing
-					Properties my = localization.get(language);
-					if (my == null) {
-						my = new Properties();
-						localization.put(language, my);
-					}
-					for (Map.Entry<Object,Object> entry : values.entrySet()) {
-						my.put(entry.getKey(), entry.getValue());
+		// Check the language setting
+		String languages[] = generatorConfig.templateMachineConfig.getConfig("languages").split(",");
+		if ((languages.length == 1) && languages[0].equalsIgnoreCase("auto")) {
+			loadAutoLanguages();
+		} else {
+			// Always load defaults
+			loadLanguage("default", "default");
+			
+			boolean other = false;
+			for (String language : languages) {
+				if (language.equals("other")) other = true;
+				else {
+					if (language.indexOf('=') > 0) {
+						String langDef[] = language.split("=");
+						if (langDef.length > 2) throw new TemplatingException("Cannot process language definition: "+language);
+						loadLanguage(langDef[0], langDef[1]);
+					} else {
+						loadLanguage(language, language);
 					}
 				}
 			}
+			if (other) {
+				loadAutoLanguages();
+			}
+		}
+	}
+
+	protected void loadAutoLanguages() throws IOException {
+		// Load the local overrides
+		File tDir = new File(generatorConfig.sourceDir, generatorConfig.templateMachineConfig.getConfig("localizationDir"));
+		if (tDir.exists() && tDir.isDirectory() && tDir.canRead()) {
+			for (File child : tDir.listFiles()) {
+				if (child.isFile() && child.canRead() && isValidFile(child)) {
+					String language = FilenameUtils.getBaseName(child.getName());
+					loadLanguage(language, child);
+				}
+			}
+		}
+	}
+
+	protected void loadLanguage(String languageKey, String sourceKey) throws IOException {
+		loadLanguage(languageKey, new File(new File(generatorConfig.sourceDir, generatorConfig.templateMachineConfig.getConfig("localizationDir")), sourceKey+".properties"));
+	}
+	
+	protected void loadLanguage(String languageKey, File languageFile) throws IOException {
+		if (languageFile.exists() && languageFile.canRead()) {
+			Properties values = new Properties();
+			values.load(FileReadUtils.getReader(languageFile, generatorConfig.templateMachineConfig.getReadEncoding()));
+
+			// Add overrides to existing
+			Properties my = localization.get(languageKey);
+			if (my == null) {
+				my = new Properties();
+				localization.put(languageKey, my);
+			}
+			for (Map.Entry<Object,Object> entry : values.entrySet()) {
+				my.put(entry.getKey(), entry.getValue());
+			}
+		} else if (!localization.containsKey(languageKey)) {
+			Properties values = localization.get("default");
+			if (values == null) values = new Properties();
+			localization.put(languageKey, values);
 		}
 	}
 
@@ -276,7 +318,7 @@ public class Generator implements Runnable, TemplateLoader {
 		if ("default".equals(lang)) return false;
 		return localization.containsKey(lang);
 	}
-	
+
 	/**
 	 * Returns all existing languages except "default".
 	 * @return set of language keys
@@ -315,7 +357,7 @@ public class Generator implements Runnable, TemplateLoader {
 		}
 		return path + file.getName();
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -347,7 +389,7 @@ public class Generator implements Runnable, TemplateLoader {
 	@Override
 	public Reader getReader(Object templateSource, String encoding) throws IOException {
 		if (templateSource instanceof File) {
-			return FileReadUtils.getReader((File)templateSource, generatorConfig.templatingConfig.getReadEncoding());
+			return FileReadUtils.getReader((File)templateSource, generatorConfig.templateMachineConfig.getReadEncoding());
 		}
 		return new StringReader(getTemplate(templateSource.toString()));
 	}
@@ -359,5 +401,20 @@ public class Generator implements Runnable, TemplateLoader {
 	public void closeTemplateSource(Object templateSource) throws IOException {
 	}
 
+
+	/**
+	 * Returns true when a file (template or localization) can be used for templating.
+	 * <p>This is being used for .bak, ~ or .swap files (temporary and backup files).</p>
+	 * @param file - the file to be checked
+	 * @return {@code true} when file can be used in template reading
+	 */
+	public boolean isValidFile(File file) {
+		if (file.equals(generatorConfig.templateMachineConfig.configFile)) return false;
+		String name = file.getName();
+		if (name.startsWith(".")) return false;
+		if (name.endsWith("~")) return false;
+		if (name.endsWith(".bak")) return false;
+		return true;
+	}
 
 }

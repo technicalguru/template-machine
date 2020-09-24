@@ -4,7 +4,6 @@
 package templating;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -25,16 +24,15 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 /**
- * Tests the Templating features with a sub dir only.
+ * Tests the TemplateMachine features.
  * @author ralph
  *
  */
 @RunWith(Parameterized.class)
-public class SubDirTemplatingTest {
+public class TemplateMachineTest {
 
 	public static File TEMPLATE_DIR = new File("src/test/data");
-	public static File SUB_DIR = new File(TEMPLATE_DIR, "dir-1");
-	public static File TARGET_DIR   = new File("target/data");
+	public static File TARGET_DIR   = new File("target/data2");
 	public static Charset ENCODING  = Charset.forName("UTF-8");
 	
 	// value1: expected: TBD               actual: ${value1}
@@ -44,12 +42,11 @@ public class SubDirTemplatingTest {
 	 * Generate the test.
 	 */
 	public static void generateValues() throws IOException {
-		System.out.println("Doing it the second time");
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
-		TemplatingConfig cfg = new TemplatingConfig(TEMPLATE_DIR, TARGET_DIR, new Date());
+		File configFile = new File(TEMPLATE_DIR, "template-machine.properties");
+		TemplateMachineConfig cfg = new TemplateMachineConfig(TEMPLATE_DIR, TARGET_DIR, configFile, new Date());
 		cfg.setReadEncoding(ENCODING);
 		cfg.setWriteEncoding(ENCODING);
-		cfg.setSubDir(SUB_DIR);
 		Project project = new Project(cfg);
 		project.generate();
 		TARGET_DIR.deleteOnExit();
@@ -111,7 +108,7 @@ public class SubDirTemplatingTest {
 	 * Constructor for parameterized test.
 	 * @param testCase - the test case
 	 */
-	public SubDirTemplatingTest(ValueTest testCase) {
+	public TemplateMachineTest(ValueTest testCase) {
 		this.testCase = testCase;
 	}
 	
@@ -120,9 +117,6 @@ public class SubDirTemplatingTest {
 	 */
 	@Test
 	public void testValue() throws Exception {
-		// Fail this test if "dir-2" is part of the file
-		assertFalse("sub-dir test failed. dir-2 is part of the value test", testCase.file.getCanonicalPath().contains("/dir-2/"));
-		
 		Matcher matcher = PATTERN.matcher(testCase.line); 
 		if (matcher.matches()) {
 			String valueName = matcher.group(1).trim();
