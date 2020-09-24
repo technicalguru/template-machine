@@ -241,6 +241,7 @@ public class TemplateMachineConfig {
 	public static Properties getDefaultConfig() {
 		if (defaultConfig == null) {
 			defaultConfig = new Properties();
+			defaultConfig.setProperty("languages", "auto");
 		}
 		return defaultConfig;
 	}

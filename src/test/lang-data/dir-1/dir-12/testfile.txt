@@ -1,0 +1,31 @@
+# Testfile dir-12:
+##################
+<#import "template.ftl" as template />
+<#import "sub/template.ftl" as subtemplate>
+
+# value1 should be the local value
+value1: expected: /dir-12/de.value1      actual: ${value1}
+
+# value2 should be the global language default
+value2: expected: /de.value2             actual: ${value2}
+
+# value3 should be the global default
+value3: expected: /default.value3        actual: ${value3}
+
+# value4 should be the local default
+value4: expected: /dir-12/default.value4 actual: ${value4}
+
+# value5 should be the parent default
+value5: expected: /dir-1/default.value5  actual: ${value5}
+
+# value6 should be the parent language default
+value6: expected: /dir-1/de.value6       actual: ${value6}
+
+# value7 should be the parent template value
+<@template.templateValue name="value7" expected="/dir-1/template.ftl" />
+
+# value8 should be the parent subtemplate value
+<@subtemplate.templateValue name="value8" expected="/dir-1/sub/template.ftl" />
+
+# Test the quoted-printable function
+value8: expected: =?UTF-8?Q?H=C3=A4tte_ich_=C3=A9s_=C3=A8vel?=  actual: <@qp>Hätte ich és èvel</@qp>

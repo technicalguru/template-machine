@@ -16,12 +16,14 @@ public class Project {
 	public static Logger log = LoggerFactory.getLogger(Project.class);
 	
 	protected TemplateMachineConfig templateMachineConfig;
+	protected ProjectInfo info;
 	
 	/**
 	 * Constructor.
 	 */
 	public Project(TemplateMachineConfig templateMachineConfig) {
 		this.templateMachineConfig = templateMachineConfig;
+		this.info                  = new ProjectInfo();
 	}
 
 	/**
@@ -59,5 +61,6 @@ public class Project {
 				generateRecursively(generator, child, new File(outputDir, child.getName()));
 			}
 		}
+		info.add(generator);	
 	}
 }

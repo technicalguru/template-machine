@@ -34,7 +34,7 @@ public class Generator implements Runnable, TemplateLoader {
 
 	/** The logger */
 	public static Logger log = LoggerFactory.getLogger(Generator.class);
-	
+
 	private static SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd/MM/yyyy");
 	private static SimpleDateFormat TIME_FORMATTER = new SimpleDateFormat("HH:mm:ss");
 
@@ -118,7 +118,7 @@ public class Generator implements Runnable, TemplateLoader {
 		// Ignore when the is a language specific template file
 		File langTemplate = new File(new File(templateFile.getParentFile(), language), templateFile.getName());
 		if (langTemplate.exists()) return;
-		
+
 		// Ignore when the template file is already language specific
 		String parentName = templateFile.getParentFile().getName();
 		if (languageExists(parentName)) {
@@ -127,7 +127,7 @@ public class Generator implements Runnable, TemplateLoader {
 			// But we need to change the output file
 			outFile = new File(outFile.getParentFile().getParentFile(), outFile.getName());
 		}
-		
+
 		log.info("Generating "+outFile.getPath()+"...");
 		// Ensure the parent dir exists
 		FileUtils.forceMkdirParent(outFile);
@@ -180,7 +180,7 @@ public class Generator implements Runnable, TemplateLoader {
 					rc.put((String)entry.getKey(), (String)entry.getValue());
 				}
 			}
-			
+
 			// Set default values
 			rc.put("languageKey", language);
 			rc.put("runDate", DATE_FORMATTER.format(generatorConfig.templateMachineConfig.getGenerationTime()));
@@ -223,7 +223,7 @@ public class Generator implements Runnable, TemplateLoader {
 			}
 		}
 	}
-	
+
 	/**
 	 * Override parent localization values.
 	 * @throws IOException the the localization files cannot be read
@@ -231,7 +231,7 @@ public class Generator implements Runnable, TemplateLoader {
 	protected void loadLocalLocalization() throws IOException {
 		localization = new HashMap<>();
 		mergedLocalizations = new HashMap<>();
-		
+
 		// Get a copy of all parent languages
 		if (parent != null) {
 			for (Map.Entry<String,Properties> entry : parent.getLocalization().entrySet()) {
@@ -243,26 +243,68 @@ public class Generator implements Runnable, TemplateLoader {
 			};
 		}
 
+		// Check the language setting
+		String languages[] = generatorConfig.templateMachineConfig.getConfig("languages").split(",");
+		if ((languages.length == 1) && languages[0].equalsIgnoreCase("auto")) {
+			loadAutoLanguages();
+		} else {
+			// Always load defaults
+			loadLanguage("default", "default");
+			
+			boolean other = false;
+			for (String language : languages) {
+				if (language.equals("other")) other = true;
+				else {
+					if (language.indexOf('=') > 0) {
+						String langDef[] = language.split("=");
+						if (langDef.length > 2) throw new TemplatingException("Cannot process language definition: "+language);
+						loadLanguage(langDef[0], langDef[1]);
+					} else {
+						loadLanguage(language, language);
+					}
+				}
+			}
+			if (other) {
+				loadAutoLanguages();
+			}
+		}
+	}
+
+	protected void loadAutoLanguages() throws IOException {
 		// Load the local overrides
 		File tDir = new File(generatorConfig.sourceDir, "__localization");
 		if (tDir.exists() && tDir.isDirectory() && tDir.canRead()) {
 			for (File child : tDir.listFiles()) {
 				if (child.isFile() && child.canRead() && isValidFile(child)) {
 					String language = FilenameUtils.getBaseName(child.getName());
-					Properties values = new Properties();
-					values.load(FileReadUtils.getReader(child, generatorConfig.templateMachineConfig.getReadEncoding()));
-
-					// Add overrides to existing
-					Properties my = localization.get(language);
-					if (my == null) {
-						my = new Properties();
-						localization.put(language, my);
-					}
-					for (Map.Entry<Object,Object> entry : values.entrySet()) {
-						my.put(entry.getKey(), entry.getValue());
-					}
+					loadLanguage(language, child);
 				}
 			}
+		}
+	}
+
+	protected void loadLanguage(String languageKey, String sourceKey) throws IOException {
+		loadLanguage(languageKey, new File(new File(generatorConfig.sourceDir, "__localization"), sourceKey+".properties"));
+	}
+	
+	protected void loadLanguage(String languageKey, File languageFile) throws IOException {
+		if (languageFile.exists() && languageFile.canRead()) {
+			Properties values = new Properties();
+			values.load(FileReadUtils.getReader(languageFile, generatorConfig.templateMachineConfig.getReadEncoding()));
+
+			// Add overrides to existing
+			Properties my = localization.get(languageKey);
+			if (my == null) {
+				my = new Properties();
+				localization.put(languageKey, my);
+			}
+			for (Map.Entry<Object,Object> entry : values.entrySet()) {
+				my.put(entry.getKey(), entry.getValue());
+			}
+		} else if (!localization.containsKey(languageKey)) {
+			Properties values = localization.get("default");
+			if (values == null) values = new Properties();
+			localization.put(languageKey, values);
 		}
 	}
 
@@ -276,7 +318,7 @@ public class Generator implements Runnable, TemplateLoader {
 		if ("default".equals(lang)) return false;
 		return localization.containsKey(lang);
 	}
-	
+
 	/**
 	 * Returns all existing languages except "default".
 	 * @return set of language keys
@@ -315,7 +357,7 @@ public class Generator implements Runnable, TemplateLoader {
 		}
 		return path + file.getName();
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -359,7 +401,7 @@ public class Generator implements Runnable, TemplateLoader {
 	public void closeTemplateSource(Object templateSource) throws IOException {
 	}
 
-	
+
 	/**
 	 * Returns true when a file (template or localization) can be used for templating.
 	 * <p>This is being used for .bak, ~ or .swap files (temporary and backup files).</p>
