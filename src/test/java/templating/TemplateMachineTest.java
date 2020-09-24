@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,7 +43,8 @@ public class TemplateMachineTest {
 	 */
 	public static void generateValues() throws IOException {
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
-		TemplateMachineConfig cfg = new TemplateMachineConfig(TEMPLATE_DIR, TARGET_DIR, new Properties(), new Date());
+		File configFile = new File(TEMPLATE_DIR, "template-machine.properties");
+		TemplateMachineConfig cfg = new TemplateMachineConfig(TEMPLATE_DIR, TARGET_DIR, configFile, new Date());
 		cfg.setReadEncoding(ENCODING);
 		cfg.setWriteEncoding(ENCODING);
 		Project project = new Project(cfg);
