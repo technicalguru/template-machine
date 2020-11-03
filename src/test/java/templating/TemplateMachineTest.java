@@ -4,10 +4,12 @@
 package templating;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,6 +25,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import templating.util.DirFinder;
+
 /**
  * Tests the TemplateMachine features.
  * @author ralph
@@ -31,17 +35,27 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class TemplateMachineTest {
 
-	public static File TEMPLATE_DIR = new File("src/test/data");
-	public static File TARGET_DIR   = new File("target/data2");
+	public static File TEMPLATE_DIR = null;
+	public static File TARGET_DIR   = null;
 	public static Charset ENCODING  = Charset.forName("UTF-8");
 	
 	// value1: expected: TBD               actual: ${value1}
 	public static Pattern PATTERN   = Pattern.compile("([^:]*):\\s*expected:\\s*(.*)\\s*actual:\\s*(.*)");
 
+	static {
+		try {
+			TEMPLATE_DIR = new File(DirFinder.findDir("data").toURI());
+			TARGET_DIR   = new File("target/data2");
+		} catch (URISyntaxException e) {
+			throw new RuntimeException("Cannot find TEMPLATE_DIR", e);
+		}
+	}
+	
 	/**
 	 * Generate the test.
 	 */
 	public static void generateValues() throws IOException {
+		assertTrue("TEMPLATE_DIR "+TEMPLATE_DIR.getAbsolutePath()+" cannot be found (Are you running outside of project dir?)", TEMPLATE_DIR.exists());
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
 		File configFile = new File(TEMPLATE_DIR, "template-machine.properties");
 		TemplateMachineConfig cfg = new TemplateMachineConfig(TEMPLATE_DIR, TARGET_DIR, configFile, new Date());

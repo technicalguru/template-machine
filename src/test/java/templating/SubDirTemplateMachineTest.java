@@ -5,10 +5,12 @@ package templating;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,10 +21,13 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
+import templating.util.DirFinder;
 
 /**
  * Tests the TemplateMachine features with a sub dir only.
@@ -32,19 +37,31 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class SubDirTemplateMachineTest {
 
-	public static File TEMPLATE_DIR = new File("src/test/data");
-	public static File SUB_DIR = new File(TEMPLATE_DIR, "dir-1");
-	public static File TARGET_DIR   = new File("target/data");
+	public static File TEMPLATE_DIR = null;
+	public static File SUB_DIR      = null;
+	public static File TARGET_DIR   = null;
 	public static Charset ENCODING  = Charset.forName("UTF-8");
 	
 	// value1: expected: TBD               actual: ${value1}
 	public static Pattern PATTERN   = Pattern.compile("([^:]*):\\s*expected:\\s*(.*)\\s*actual:\\s*(.*)");
 
+	static {
+		try {
+			TEMPLATE_DIR = new File(DirFinder.findDir("data").toURI());
+			SUB_DIR      = new File(TEMPLATE_DIR, "dir-1");
+			TARGET_DIR   = new File("target"+System.getProperty("file.separator")+"data");
+		} catch (URISyntaxException e) {
+			throw new RuntimeException("Cannot find TEMPLATE_DIR", e);
+		}
+	}
+	
+	
 	/**
 	 * Generate the test.
 	 */
+	@BeforeClass
 	public static void generateValues() throws IOException {
-		System.out.println("Doing it the second time");
+		assertTrue("TEMPLATE_DIR "+TEMPLATE_DIR.getAbsolutePath()+" cannot be found (Are you running outside of project dir?)", TEMPLATE_DIR.exists());
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
 		File configFile = new File(TEMPLATE_DIR, "template-machine.properties");
 		TemplateMachineConfig cfg = new TemplateMachineConfig(TEMPLATE_DIR, TARGET_DIR, configFile, new Date());
