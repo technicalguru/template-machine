@@ -139,7 +139,9 @@ public class Generator implements Runnable, TemplateLoader {
 
 		// Generate
 		Template temp = freemarkerConfig.getTemplate(templateFile.getName());
-		temp.process(localization, new FileWriter(outFile));
+		FileWriter writer = new FileWriter(outFile);
+		temp.process(localization, writer);
+		writer.close();
 	}
 
 	/**
