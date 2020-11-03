@@ -7,8 +7,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import rs.baselib.io.FileFinder;
-
 /**
  * Helps finding dircetories.
  * @author ralph
@@ -16,7 +14,7 @@ import rs.baselib.io.FileFinder;
  */
 public class DirFinder {
 
-	private static Logger log = LoggerFactory.getLogger(FileFinder.class);
+	private static Logger log = LoggerFactory.getLogger(DirFinder.class);
 
 	/**
 	 * Tries to find the file specified from filesystem or classpath.
