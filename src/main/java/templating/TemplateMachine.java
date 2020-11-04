@@ -5,9 +5,12 @@ package templating;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -20,6 +23,8 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import templating.util.GenerationInfo;
+
 /**
  * The main class for templating.
  * @author ralph
@@ -31,6 +36,59 @@ public class TemplateMachine {
 	public static Logger log = LoggerFactory.getLogger(TemplateMachine.class);
 	
 	private static SimpleDateFormat DATETIMEBUILDER = new SimpleDateFormat("yyyyMMddHHmmss");
+	
+	protected TemplateMachineConfig config;
+	
+	/**
+	 * Constructor.
+	 */
+	public TemplateMachine(TemplateMachineConfig config) {
+		this.config = config;
+	}
+
+	/**
+	 * Generate the project files.
+	 */
+	public GenerationInfo generate() {
+		try {
+			log.info("Generating project "+config.getSourceDir()+"...");
+			
+			// Encoding
+			System.setProperty("file.encoding", config.getReadEncoding().name());
+
+			// Root Context
+			Context rootContext = new Context(config.getSourceDir(), config.getOutputDir(), config.getSubDir(), config.getConfig());
+			rootContext.setReadEncoding(config.getReadEncoding());
+			rootContext.setWriteEncoding(config.getWriteEncoding());
+			
+			// Recursively dive into the folder and generate the templates
+			GenerationInfo rc = generateRecursively(rootContext);
+			log.info("You will find your generated files in "+config.getOutputDir());
+			return rc;
+		} finally {
+			log.info("Done");
+		}
+	}
+	
+	/**
+	 * Generate recursively
+	 * @param parent - the parent generator to allow overriding templates and localizations
+	 * @param sourceDir    - the directory to process
+	 * @param outputDir - the output directory
+	 */
+	protected GenerationInfo generateRecursively(Context context) {
+		// Create the generator
+		Generator generator = new Generator(context);
+		generator.run();
+		GenerationInfo rc = generator.getInfo();
+		for (File child : context.getSourceDir().listFiles()) {
+			if (!context.isSpecialFile(child) && child.isDirectory() && child.canRead()) {
+				Context childContext = new Context(context, child, new File(context.getOutputDir(), child.getName()));
+				rc.add(generateRecursively(childContext));
+			}
+		}
+		return rc;
+	}
 	
 	/**
 	 * Main method.
@@ -72,15 +130,19 @@ public class TemplateMachine {
 			}
 			
 			// Read the configuration
-			String configFile        = cl.getOptionValue("c");
-			File   configFileFile    = new File(projectDirFile, "template-machine.properties");
-			if (configFile != null) {
-				configFileFile = new File(configFile);
-				if (!configFileFile.exists() || !configFileFile.isFile()) {
-					throw new TemplatingException(configFile+" does not exist");
+			Properties config     = new Properties();
+			String configFilename = cl.getOptionValue("c");
+			File   configFile     = new File(projectDirFile, "template-machine.properties");
+			if (configFilename != null) {
+				configFile = new File(configFilename);
+				if (!configFile.exists() || !configFile.isFile()) {
+					throw new TemplatingException(configFilename+" does not exist");
 				}
+				config = load(configFile);
 			}
-			TemplateMachineConfig cfg = new TemplateMachineConfig(projectDirFile, outDirFile, configFileFile, generationTime);
+			
+			// Read config
+			TemplateMachineConfig cfg = new TemplateMachineConfig(projectDirFile, outDirFile, config, generationTime);
 			
 			// The subdir if it exists
 			String subDir   = cl.getOptionValue("s");
@@ -109,10 +171,10 @@ public class TemplateMachine {
 			cfg.setWriteEncoding(writeEncoding);
 			
 			// Now the project
-			Project project = new Project(cfg);
+			TemplateMachine machine = new TemplateMachine(cfg);
 			
 			// And run...
-			project.generate();
+			machine.generate();
 		} catch (MissingOptionException e) {
 			HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp("templating", getCommandLineOptions());
@@ -167,5 +229,9 @@ public class TemplateMachine {
 		return rc;
 	}
 
-
+	public static Properties load(File file) throws IOException {
+		Properties rc = new Properties();
+		rc.load(new FileReader(file));
+		return rc;
+	}
 }

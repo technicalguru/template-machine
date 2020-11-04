@@ -64,12 +64,12 @@ public class SubDirTemplateMachineTest {
 		assertTrue("TEMPLATE_DIR "+TEMPLATE_DIR.getAbsolutePath()+" cannot be found (Are you running outside of project dir?)", TEMPLATE_DIR.exists());
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
 		File configFile = new File(TEMPLATE_DIR, "template-machine.properties");
-		TemplateMachineConfig cfg = new TemplateMachineConfig(TEMPLATE_DIR, TARGET_DIR, configFile, new Date());
+		TemplateMachineConfig cfg = new TemplateMachineConfig(TEMPLATE_DIR, TARGET_DIR, TemplateMachine.load(configFile), new Date());
 		cfg.setReadEncoding(ENCODING);
 		cfg.setWriteEncoding(ENCODING);
 		cfg.setSubDir(SUB_DIR);
-		Project project = new Project(cfg);
-		project.generate();
+		TemplateMachine machine = new TemplateMachine(cfg);
+		machine.generate();
 		TARGET_DIR.deleteOnExit();
 	}
 	
