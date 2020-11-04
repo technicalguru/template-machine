@@ -4,8 +4,9 @@
 package templating;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.HashSet;
@@ -189,7 +190,7 @@ public class TemplateMachineConfig {
 			if (!file.canRead()) {
 				throw new TemplatingException("Cannot read "+file.getCanonicalPath());
 			}
-			rc.load(new FileReader(file, readEncoding));
+			rc.load(new InputStreamReader(new FileInputStream(file), readEncoding));
 		}
 		return rc;
 	}

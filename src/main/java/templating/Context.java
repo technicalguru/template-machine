@@ -1,8 +1,9 @@
 package templating;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -128,7 +129,7 @@ public class Context {
 			File localConfigFile = new File(sourceDir, ".config");
 			if (localConfigFile.exists() && localConfigFile.canRead()) {
 				Properties p = new Properties(this.config);
-				p.load(new FileReader(localConfigFile, readEncoding));
+				p.load(new InputStreamReader(new FileInputStream(localConfigFile), readEncoding));
 				this.config = p;
 			}
 		} catch (Throwable t) {
@@ -204,7 +205,7 @@ public class Context {
 
 			File lFile = new File(new File(sourceDir, getConfigString("localizationDir")), loadKey+".properties");
 			if (lFile.isFile() && lFile.canRead()) {
-				values.load(new FileReader(lFile, readEncoding));
+				values.load(new InputStreamReader(new FileInputStream(lFile), readEncoding));
 			}
 
 			localizations.put(key, values);
