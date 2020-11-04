@@ -60,6 +60,7 @@ public class TemplateMachine {
 			Context rootContext = new Context(config.getSourceDir(), config.getOutputDir(), config.getSubDir(), config.getConfig());
 			rootContext.setReadEncoding(config.getReadEncoding());
 			rootContext.setWriteEncoding(config.getWriteEncoding());
+			rootContext.setIgnoredFiles(config.getIgnoredFiles());
 			
 			// Recursively dive into the folder and generate the templates
 			GenerationInfo rc = generateRecursively(rootContext);
@@ -132,17 +133,19 @@ public class TemplateMachine {
 			// Read the configuration
 			Properties config     = new Properties();
 			String configFilename = cl.getOptionValue("c");
-			File   configFile     = new File(projectDirFile, "template-machine.properties");
-			if (configFilename != null) {
-				configFile = new File(configFilename);
-				if (!configFile.exists() || !configFile.isFile()) {
-					throw new TemplatingException(configFilename+" does not exist");
-				}
-				config = load(configFile);
+			File   configFile     = null;
+			if (configFilename == null) configFilename = new File(projectDirFile, "template-machine.properties").getAbsolutePath();
+			configFile = new File(configFilename);
+			if (!configFile.exists() || !configFile.isFile()) {
+				throw new TemplatingException(configFilename+" does not exist");
 			}
 			
 			// Read config
+			config = load(configFile);
+
+			// Create machine config
 			TemplateMachineConfig cfg = new TemplateMachineConfig(projectDirFile, outDirFile, config, generationTime);
+			cfg.ignoreFile(configFile);
 			
 			// The subdir if it exists
 			String subDir   = cl.getOptionValue("s");
@@ -170,7 +173,7 @@ public class TemplateMachine {
 			Charset writeEncoding = Charset.forName(writeEncodingName);
 			cfg.setWriteEncoding(writeEncoding);
 			
-			// Now the project
+			// Now the machine itself
 			TemplateMachine machine = new TemplateMachine(cfg);
 			
 			// And run...

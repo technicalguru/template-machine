@@ -8,7 +8,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Describes configuration for a run.
@@ -25,6 +27,7 @@ public class TemplateMachineConfig {
 	protected Date       generationTime;
 	protected Charset    readEncoding   = Charset.defaultCharset();
 	protected Charset    writeEncoding  = Charset.defaultCharset();
+	private Set<File>    ignoredFiles   = new HashSet<>();
 
 
 	/**
@@ -148,6 +151,30 @@ public class TemplateMachineConfig {
 	 */
 	public void setConfig(Properties config) {
 		this.config = config;
+	}
+
+	/**
+	 * Returns the ignoredFiles.
+	 * @return the ignoredFiles
+	 */
+	public Set<File> getIgnoredFiles() {
+		return ignoredFiles;
+	}
+
+	/**
+	 * Adds file to list of ignore files.
+	 * @param file file to be ignored
+	 */
+	public void ignoreFile(File file) {
+		ignoredFiles.add(file);
+	}
+	
+	/**
+	 * Sets the ignoredFiles.
+	 * @param ignoredFiles - the ignoredFiles to set
+	 */
+	public void setIgnoredFiles(Set<File> ignoredFiles) {
+		this.ignoredFiles = ignoredFiles;
 	}
 
 	/**

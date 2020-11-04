@@ -52,7 +52,8 @@ public class Context {
 	private Map<String,Properties> localizations;
 	private Map<String,Map<String,String>> mergedLocalizations;
 	private Properties             templates;
-
+	private Set<File>              ignoredFiles;
+	
 	/**
 	 * Root Constructor.
 	 * @param sourceDir the source directory to be processed
@@ -96,6 +97,7 @@ public class Context {
 			config         = parent.config;
 			generationTime = parent.getGenerationTime();
 			templates      = new Properties(parent.getTemplates());
+			ignoredFiles   = new HashSet<>(parent.getIgnoredFiles());
 		} else {
 			sourceRoot     = sourceDir;
 			outputRoot     = outputDir;
@@ -103,6 +105,7 @@ public class Context {
 			writeEncoding  = Charset.defaultCharset();
 			generationTime = new Date();
 			templates      = new Properties();
+			ignoredFiles   = new HashSet<>();
 		}
 
 		// Now load config for local context from .config file
@@ -117,7 +120,7 @@ public class Context {
 	}
 
 	/**
-	 * Loads the local configuration by using {@link #defaultConfig} and parent configuration
+	 * Loads the local configuration and parent configuration
 	 * as well as local .config files in current directory {@link #sourceDir}.
 	 */
 	protected void loadLocalConfig() {
@@ -139,7 +142,7 @@ public class Context {
 	 * @return the value valid for this context
 	 */
 	public String getConfigString(String key) {
-		return config.getProperty(key, defaultConfig.getProperty(key));
+		return config.getProperty(key, getDefaultConfig().getProperty(key));
 	}
 
 	/**
@@ -147,9 +150,10 @@ public class Context {
 	 */
 	protected void loadLocalizations() {
 		if (this.localizations == null) {
-			this.localizations    = new HashMap<>();
-			this.languages        = new HashSet<>();
-			String languageDefs[] = getConfigString("languages").split(",");
+			this.localizations       = new HashMap<>();
+			this.mergedLocalizations = new HashMap<>();
+			this.languages           = new HashSet<>();
+			String languageDefs[]    = getConfigString("languages").split(",");
 			if ((languageDefs.length == 1) && languageDefs[0].equalsIgnoreCase("auto")) {
 				loadAutoLanguages();
 			} else {
@@ -186,22 +190,14 @@ public class Context {
 	 */
 	protected void loadLanguage(String key, String loadKey) {
 		try {
-			Properties values       = null;
-			Properties parentValues = null;
+			Properties values       = new Properties();
 			if (parent != null) {
 				// Get the language from parent (stored under key)
-				parentValues = parent.getLocalizations(key);
+				Properties parentValues = parent.getLocalizations(key);
+				if (parentValues != null) values.putAll(parentValues);
 				// Get the language from parent (stored under loadKey)
-				if (parentValues == null) {
-					parentValues = parent.getLocalizations(loadKey);
-				}
-			}
-
-			// Try to load the local definition (under loadKey)
-			if (parentValues != null) {
-				values = new Properties(parentValues);
-			} else {
-				values = new Properties();
+				parentValues = parent.getLocalizations(loadKey);
+				if (parentValues != null) values.putAll(parentValues);
 			}
 
 			File lFile = new File(new File(sourceDir, getConfigString("localizationDir")), loadKey+".properties");
@@ -535,13 +531,37 @@ public class Context {
 	}
 
 	/**
+	 * Sets the ignoredFiles.
+	 * @param ignoredFiles - the ignoredFiles to set
+	 */
+	public void setIgnoredFiles(Set<File> ignoredFiles) {
+		this.ignoredFiles = ignoredFiles;
+	}
+
+	/**
+	 * Returns the ignoredFiles.
+	 * @return the ignoredFiles
+	 */
+	public Set<File> getIgnoredFiles() {
+		return ignoredFiles;
+	}
+
+	/**
+	 * Adds file to list of ignore files.
+	 * @param file file to be ignored
+	 */
+	public void ignoreFile(File file) {
+		ignoredFiles.add(file);
+	}
+	
+	/**
 	 * Returns true when a file (template or localization) can be used for templating.
 	 * <p>This is being used to ignore .bak, ~ or .swap files (temporary and backup files).</p>
 	 * @param file - the file to be checked
 	 * @return {@code true} when file can be used in template reading
 	 */
 	public boolean isValidFile(File file) {
-		//if (file.equals(generatorConfig.templateMachineConfig.configFile)) return false;
+		if (ignoredFiles.contains(file)) return false;
 		String name = file.getName();
 		if (name.startsWith(".")) return false;
 		if (name.endsWith("~")) return false;
@@ -557,7 +577,7 @@ public class Context {
 	public boolean isSpecialFile(File file) {
 		if (file.getName().equals(getConfigString("templateDir"))) return true;	
 		if (file.getName().equals(getConfigString("localizationDir"))) return true;
-		// TODO if (file.equals(configFile)) return true;
+		if (ignoredFiles.contains(file)) return true;
 		return false;
 	}
 
@@ -574,6 +594,5 @@ public class Context {
 		}
 		return path + file.getName();
 	}
-
 
 }

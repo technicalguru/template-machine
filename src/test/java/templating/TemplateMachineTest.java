@@ -61,6 +61,7 @@ public class TemplateMachineTest {
 		TemplateMachineConfig cfg = new TemplateMachineConfig(TEMPLATE_DIR, TARGET_DIR, TemplateMachine.load(configFile), new Date());
 		cfg.setReadEncoding(ENCODING);
 		cfg.setWriteEncoding(ENCODING);
+		cfg.ignoreFile(configFile);
 		TemplateMachine machine = new TemplateMachine(cfg);
 		machine.generate();
 		TARGET_DIR.deleteOnExit();

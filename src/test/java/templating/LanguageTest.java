@@ -55,6 +55,7 @@ public class LanguageTest {
 		TemplateMachineConfig cfg = new TemplateMachineConfig(TEMPLATE_DIR, TARGET_DIR, TemplateMachine.load(configFile), new Date());
 		cfg.setReadEncoding(ENCODING);
 		cfg.setWriteEncoding(ENCODING);
+		cfg.ignoreFile(configFile);
 		machine = new TemplateMachine(cfg);
 		info    = machine.generate();
 		TARGET_DIR.deleteOnExit();
@@ -77,9 +78,15 @@ public class LanguageTest {
 		Collection<String> languages = info.getLanguages();
 		assertTrue("English was not generated", languages.contains("en"));
 	}
+	
 	@Test
 	public void testLanguageES() {
 		Collection<String> languages = info.getLanguages();
 		assertTrue("Spanish was not generated", languages.contains("es"));
+	}
+	
+	@Test
+	public void testFilesCount() {
+		assertEquals("Invalid number of files generated", 12, info.getFiles());
 	}
 }

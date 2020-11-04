@@ -68,6 +68,7 @@ public class SubDirTemplateMachineTest {
 		cfg.setReadEncoding(ENCODING);
 		cfg.setWriteEncoding(ENCODING);
 		cfg.setSubDir(SUB_DIR);
+		cfg.ignoreFile(configFile);
 		TemplateMachine machine = new TemplateMachine(cfg);
 		machine.generate();
 		TARGET_DIR.deleteOnExit();
