@@ -131,17 +131,23 @@ public class TemplateMachine {
 			}
 			
 			// Read the configuration
-			Properties config     = new Properties();
-			String configFilename = cl.getOptionValue("c");
-			File   configFile     = null;
-			if (configFilename == null) configFilename = new File(projectDirFile, "template-machine.properties").getAbsolutePath();
-			configFile = new File(configFilename);
-			if (!configFile.exists() || !configFile.isFile()) {
-				throw new TemplatingException(configFilename+" does not exist");
+			Properties config         = new Properties();
+			String     configFilename = cl.getOptionValue("c");
+			File       configFile     = null;
+			if (configFilename != null) {
+				configFile     = new File(configFilename);
+				if (!configFile.exists() || !configFile.isFile()) {
+					throw new TemplatingException(configFilename+" does not exist");
+				}
+			} else {
+				configFile = new File(projectDirFile, "template-machine.properties");
+				if (!configFile.exists() || !configFile.isFile()) configFile = null;
 			}
-			
+						
 			// Read config
-			config = load(configFile);
+			if (configFile != null) {
+				config = load(configFile);
+			}
 
 			// Create machine config
 			TemplateMachineConfig cfg = new TemplateMachineConfig(projectDirFile, outDirFile, config, generationTime);

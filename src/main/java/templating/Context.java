@@ -153,12 +153,14 @@ public class Context {
 			this.localizations       = new HashMap<>();
 			this.mergedLocalizations = new HashMap<>();
 			this.languages           = new HashSet<>();
+
+			// Load always default
+			loadLanguage("default", "default");
+
 			String languageDefs[]    = getConfigString("languages").split(",");
 			if ((languageDefs.length == 1) && languageDefs[0].equalsIgnoreCase("auto")) {
 				loadAutoLanguages();
 			} else {
-				// Load always default
-				loadLanguage("default", "default");
 
 				boolean other = false;
 				for (String language : languageDefs) {
@@ -284,12 +286,14 @@ public class Context {
 			Properties defaults = localizations.get("default");
 			if (defaults != null) {
 				for (Map.Entry<Object, Object> entry : defaults.entrySet()) {
+					//System.out.println(language+": Adding default."+entry.getKey()+"="+entry.getValue());
 					rc.put((String)entry.getKey(), (String)entry.getValue());
 				}
 			}
 			Properties values = localizations.get(language);
 			if (values != null) {
 				for (Map.Entry<Object, Object> entry : values.entrySet()) {
+					//System.out.println(language+": Adding local."+entry.getKey()+"="+entry.getValue());
 					rc.put((String)entry.getKey(), (String)entry.getValue());
 				}
 			}
