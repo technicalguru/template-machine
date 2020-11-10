@@ -37,13 +37,13 @@ public class TemplateMachine {
 	
 	private static SimpleDateFormat DATETIMEBUILDER = new SimpleDateFormat("yyyyMMddHHmmss");
 	
-	protected TemplateMachineConfig config;
+	protected Context rootContext;
 	
 	/**
 	 * Constructor.
 	 */
-	public TemplateMachine(TemplateMachineConfig config) {
-		this.config = config;
+	public TemplateMachine(Context rootContext) {
+		this.rootContext = rootContext;
 	}
 
 	/**
@@ -51,20 +51,21 @@ public class TemplateMachine {
 	 */
 	public GenerationInfo generate() {
 		try {
-			log.info("Generating project "+config.getSourceDir()+"...");
+			log.info("Generating project "+rootContext.getSourceRoot()+"...");
 			
+			/*
 			// Encoding
-			System.setProperty("file.encoding", config.getReadEncoding().name());
+			System.setProperty("file.encoding", rootContext.getReadEncoding().name());
 
 			// Root Context
-			Context rootContext = new Context(config.getSourceDir(), config.getOutputDir(), config.getSubDir(), config.getConfig());
-			rootContext.setReadEncoding(config.getReadEncoding());
-			rootContext.setWriteEncoding(config.getWriteEncoding());
-			rootContext.setIgnoredFiles(config.getIgnoredFiles());
-			
+			Context rootContext = new Context(rootContext.getSourceDir(), rootContext.getOutputDir(), rootContext.getSubDir(), rootContext.getConfig());
+			rootContext.setReadEncoding(rootContext.getReadEncoding());
+			rootContext.setWriteEncoding(rootContext.getWriteEncoding());
+			rootContext.setIgnoredFiles(rootContext.getIgnoredFiles());
+			*/
 			// Recursively dive into the folder and generate the templates
 			GenerationInfo rc = generateRecursively(rootContext);
-			log.info("You will find your generated files in "+config.getOutputDir());
+			log.info("You will find your generated files in "+rootContext.getOutputRoot());
 			return rc;
 		} finally {
 			log.info("Done");
@@ -149,19 +150,19 @@ public class TemplateMachine {
 				config = load(configFile);
 			}
 
-			// Create machine config
-			TemplateMachineConfig cfg = new TemplateMachineConfig(projectDirFile, outDirFile, config, generationTime);
-			cfg.ignoreFile(configFile);
-			
-			// The subdir if it exists
-			String subDir   = cl.getOptionValue("s");
+			// The sub dir if it exists
+			String subDir     = cl.getOptionValue("s");
+			File   subDirFile = projectDirFile;
 			if (subDir != null) {
-				File subDirFile = new File(projectDirFile, subDir);
+				subDirFile = new File(projectDirFile, subDir);
 				if (!subDirFile.exists() || !subDirFile.isDirectory()) {
 					throw new TemplatingException("Sub-directory "+subDirFile.getCanonicalPath()+" does not exist");
 				}
-				cfg.setSubDir(subDirFile);
 			}
+			
+			// Create rootContext
+			Context rootContext = new Context(projectDirFile, outDirFile, subDirFile, config);
+			rootContext.ignoreFile(configFile);
 			
 			// Reading encoding
 			String readEncodingName = Charset.defaultCharset().name();
@@ -169,7 +170,7 @@ public class TemplateMachine {
 				readEncodingName = cl.getOptionValue("r");
 			}
 			Charset readEncoding = Charset.forName(readEncodingName);
-			cfg.setReadEncoding(readEncoding);
+			rootContext.setReadEncoding(readEncoding);
 			
 			// Writing encoding
 			String writeEncodingName = Charset.defaultCharset().name();
@@ -177,10 +178,10 @@ public class TemplateMachine {
 				writeEncodingName = cl.getOptionValue("w");
 			}
 			Charset writeEncoding = Charset.forName(writeEncodingName);
-			cfg.setWriteEncoding(writeEncoding);
+			rootContext.setWriteEncoding(writeEncoding);
 			
 			// Now the machine itself
-			TemplateMachine machine = new TemplateMachine(cfg);
+			TemplateMachine machine = new TemplateMachine(rootContext);
 			
 			// And run...
 			machine.generate();

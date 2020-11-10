@@ -13,7 +13,6 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,11 +57,11 @@ public class TemplateMachineTest {
 		assertTrue("TEMPLATE_DIR "+TEMPLATE_DIR.getAbsolutePath()+" cannot be found (Are you running outside of project dir?)", TEMPLATE_DIR.exists());
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
 		File configFile = new File(TEMPLATE_DIR, "template-machine.properties");
-		TemplateMachineConfig cfg = new TemplateMachineConfig(TEMPLATE_DIR, TARGET_DIR, TemplateMachine.load(configFile), new Date());
-		cfg.setReadEncoding(ENCODING);
-		cfg.setWriteEncoding(ENCODING);
-		cfg.ignoreFile(configFile);
-		TemplateMachine machine = new TemplateMachine(cfg);
+		Context rootContext = new Context(TEMPLATE_DIR, TARGET_DIR, TEMPLATE_DIR, TemplateMachine.load(configFile));
+		rootContext.setReadEncoding(ENCODING);
+		rootContext.setWriteEncoding(ENCODING);
+		rootContext.ignoreFile(configFile);
+		TemplateMachine machine = new TemplateMachine(rootContext);
 		machine.generate();
 		TARGET_DIR.deleteOnExit();
 	}

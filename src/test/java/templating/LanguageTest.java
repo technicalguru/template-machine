@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Collection;
-import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
@@ -52,11 +51,11 @@ public class LanguageTest {
 		assertTrue("TEMPLATE_DIR "+TEMPLATE_DIR.getAbsolutePath()+" cannot be found (Are you running outside of project dir?)", TEMPLATE_DIR.exists());
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
 		File configFile = new File(TEMPLATE_DIR, "template-machine.properties");
-		TemplateMachineConfig cfg = new TemplateMachineConfig(TEMPLATE_DIR, TARGET_DIR, TemplateMachine.load(configFile), new Date());
-		cfg.setReadEncoding(ENCODING);
-		cfg.setWriteEncoding(ENCODING);
-		cfg.ignoreFile(configFile);
-		machine = new TemplateMachine(cfg);
+		Context rootContext = new Context(TEMPLATE_DIR, TARGET_DIR, TEMPLATE_DIR, TemplateMachine.load(configFile));
+		rootContext.setReadEncoding(ENCODING);
+		rootContext.setWriteEncoding(ENCODING);
+		rootContext.ignoreFile(configFile);
+		machine = new TemplateMachine(rootContext);
 		info    = machine.generate();
 		TARGET_DIR.deleteOnExit();
 	}
