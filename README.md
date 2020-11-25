@@ -30,8 +30,7 @@ The project is in Beta phase. APIs are unlikely to change but it can still happe
 
 * [Getting Started](doc/GETTING-STARTED.md)
 * [Understanding the Concept](doc/CONCEPT.md)
-* [Writing Freemarker Templates](doc/TEMPLATES.md)
-* [Template Localization](doc/LOCALIZATION.md)
+* [Configuration](doc/CONFIGURATION.md)
 * [CLI - Command Line Interface](doc/CLI.md)
 * [Using the Java API](doc/JAVA-API.md)
 
