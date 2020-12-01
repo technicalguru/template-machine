@@ -187,7 +187,7 @@ public class TemplateMachine {
 			machine.generate();
 		} catch (MissingOptionException e) {
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp("templating", getCommandLineOptions());
+			formatter.printHelp("template-machine", getCommandLineOptions());
 		} catch (Throwable t) {
 			log.error(t.getMessage(), t);
 		}
@@ -201,7 +201,7 @@ public class TemplateMachine {
 		Options rc = new Options();
 		Option option = null;
 
-		option = new Option("t", "template-dir", true, "template directory");
+		option = new Option("t", "template-dir", true, "(template) source directory");
 		option.setRequired(true);
 		option.setArgs(1);
 		rc.addOption(option);
