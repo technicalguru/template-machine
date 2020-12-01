@@ -5,9 +5,12 @@ package templating;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -20,6 +23,8 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import templating.util.GenerationInfo;
+
 /**
  * The main class for templating.
  * @author ralph
@@ -31,6 +36,61 @@ public class TemplateMachine {
 	public static Logger log = LoggerFactory.getLogger(TemplateMachine.class);
 	
 	private static SimpleDateFormat DATETIMEBUILDER = new SimpleDateFormat("yyyyMMddHHmmss");
+	
+	protected Context rootContext;
+	
+	/**
+	 * Constructor.
+	 */
+	public TemplateMachine(Context rootContext) {
+		this.rootContext = rootContext;
+	}
+
+	/**
+	 * Generate the project files.
+	 */
+	public GenerationInfo generate() {
+		try {
+			log.info("Generating project "+rootContext.getSourceRoot()+"...");
+			
+			/*
+			// Encoding
+			System.setProperty("file.encoding", rootContext.getReadEncoding().name());
+
+			// Root Context
+			Context rootContext = new Context(rootContext.getSourceDir(), rootContext.getOutputDir(), rootContext.getSubDir(), rootContext.getConfig());
+			rootContext.setReadEncoding(rootContext.getReadEncoding());
+			rootContext.setWriteEncoding(rootContext.getWriteEncoding());
+			rootContext.setIgnoredFiles(rootContext.getIgnoredFiles());
+			*/
+			// Recursively dive into the folder and generate the templates
+			GenerationInfo rc = generateRecursively(rootContext);
+			log.info("You will find your generated files in "+rootContext.getOutputRoot());
+			return rc;
+		} finally {
+			log.info("Done");
+		}
+	}
+	
+	/**
+	 * Generate recursively
+	 * @param parent - the parent generator to allow overriding templates and localizations
+	 * @param sourceDir    - the directory to process
+	 * @param outputDir - the output directory
+	 */
+	protected GenerationInfo generateRecursively(Context context) {
+		// Create the generator
+		Generator generator = new Generator(context);
+		generator.run();
+		GenerationInfo rc = generator.getInfo();
+		for (File child : context.getSourceDir().listFiles()) {
+			if (!context.isSpecialFile(child) && child.isDirectory() && child.canRead()) {
+				Context childContext = new Context(context, child, new File(context.getOutputDir(), child.getName()));
+				rc.add(generateRecursively(childContext));
+			}
+		}
+		return rc;
+	}
 	
 	/**
 	 * Main method.
@@ -72,25 +132,37 @@ public class TemplateMachine {
 			}
 			
 			// Read the configuration
-			String configFile        = cl.getOptionValue("c");
-			File   configFileFile    = new File(projectDirFile, "template-machine.properties");
-			if (configFile != null) {
-				configFileFile = new File(configFile);
-				if (!configFileFile.exists() || !configFileFile.isFile()) {
-					throw new TemplatingException(configFile+" does not exist");
+			Properties config         = new Properties();
+			String     configFilename = cl.getOptionValue("c");
+			File       configFile     = null;
+			if (configFilename != null) {
+				configFile     = new File(configFilename);
+				if (!configFile.exists() || !configFile.isFile()) {
+					throw new TemplatingException(configFilename+" does not exist");
 				}
+			} else {
+				configFile = new File(projectDirFile, "template-machine.properties");
+				if (!configFile.exists() || !configFile.isFile()) configFile = null;
 			}
-			TemplateMachineConfig cfg = new TemplateMachineConfig(projectDirFile, outDirFile, configFileFile, generationTime);
-			
-			// The subdir if it exists
-			String subDir   = cl.getOptionValue("s");
+						
+			// Read config
+			if (configFile != null) {
+				config = load(configFile);
+			}
+
+			// The sub dir if it exists
+			String subDir     = cl.getOptionValue("s");
+			File   subDirFile = projectDirFile;
 			if (subDir != null) {
-				File subDirFile = new File(projectDirFile, subDir);
+				subDirFile = new File(projectDirFile, subDir);
 				if (!subDirFile.exists() || !subDirFile.isDirectory()) {
 					throw new TemplatingException("Sub-directory "+subDirFile.getCanonicalPath()+" does not exist");
 				}
-				cfg.setSubDir(subDirFile);
 			}
+			
+			// Create rootContext
+			Context rootContext = new Context(projectDirFile, outDirFile, subDirFile, config);
+			rootContext.ignoreFile(configFile);
 			
 			// Reading encoding
 			String readEncodingName = Charset.defaultCharset().name();
@@ -98,7 +170,7 @@ public class TemplateMachine {
 				readEncodingName = cl.getOptionValue("r");
 			}
 			Charset readEncoding = Charset.forName(readEncodingName);
-			cfg.setReadEncoding(readEncoding);
+			rootContext.setReadEncoding(readEncoding);
 			
 			// Writing encoding
 			String writeEncodingName = Charset.defaultCharset().name();
@@ -106,16 +178,16 @@ public class TemplateMachine {
 				writeEncodingName = cl.getOptionValue("w");
 			}
 			Charset writeEncoding = Charset.forName(writeEncodingName);
-			cfg.setWriteEncoding(writeEncoding);
+			rootContext.setWriteEncoding(writeEncoding);
 			
-			// Now the project
-			Project project = new Project(cfg);
+			// Now the machine itself
+			TemplateMachine machine = new TemplateMachine(rootContext);
 			
 			// And run...
-			project.generate();
+			machine.generate();
 		} catch (MissingOptionException e) {
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp("templating", getCommandLineOptions());
+			formatter.printHelp("template-machine", getCommandLineOptions());
 		} catch (Throwable t) {
 			log.error(t.getMessage(), t);
 		}
@@ -129,7 +201,7 @@ public class TemplateMachine {
 		Options rc = new Options();
 		Option option = null;
 
-		option = new Option("t", "template-dir", true, "template directory");
+		option = new Option("t", "template-dir", true, "(template) source directory");
 		option.setRequired(true);
 		option.setArgs(1);
 		rc.addOption(option);
@@ -167,5 +239,9 @@ public class TemplateMachine {
 		return rc;
 	}
 
-
+	public static Properties load(File file) throws IOException {
+		Properties rc = new Properties();
+		rc.load(new FileReader(file));
+		return rc;
+	}
 }

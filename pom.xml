@@ -1,11 +1,14 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>eu.ralph-schuster</groupId>
+	<parent>
+		<groupId>eu.ralph-schuster</groupId>
+		<artifactId>pom-oss</artifactId>
+		<version>2.0.2</version>
+	</parent>
+	
 	<artifactId>template-machine</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>0.9.0</version>
 	<name>template-machine</name>
 	<description>Templating engines for files</description>
 	<url>https://github.com/technicalguru/template-machine</url>
@@ -21,9 +24,8 @@
 		<connection>scm:git:https://github.com/technicalguru/template-machine.git</connection>
 		<developerConnection>scm:git:https://github.com/technicalguru/template-machine.git</developerConnection>
 		<url>https://github.com/technicalguru/template-machine</url>
-		<tag>develop</tag>
+		<tag>template-machine-0.9.0</tag>
 	</scm>
-
 
 	<licenses>
 		<license>
@@ -79,26 +81,16 @@
 			<version>4.13</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.6</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
-			<!-- Compile for Java 9 -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
-				<configuration>
-					<source>8</source>
-					<target>8</target>
-					<showDeprecation>true</showDeprecation>
-				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-install-plugin</artifactId>
-				<version>2.5.2</version>
-			</plugin>
-
 			<!-- Distribution packaging -->
 			<plugin>
 				<!-- NOTE: We don't need a groupId specification because the group is 
@@ -127,37 +119,5 @@
 				</executions>
 			</plugin>
 		</plugins>
-
-		<pluginManagement>
-			<plugins>
-				<!-- Ignore/Execute plugin execution -->
-				<plugin>
-					<groupId>org.eclipse.m2e</groupId>
-					<artifactId>lifecycle-mapping</artifactId>
-					<version>1.0.0</version>
-					<configuration>
-						<lifecycleMappingMetadata>
-							<pluginExecutions>
-								<!-- copy-dependency plugin -->
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>org.apache.maven.plugins</groupId>
-										<artifactId>maven-dependency-plugin</artifactId>
-										<versionRange>[1.0.0,)</versionRange>
-										<goals>
-											<goal>copy-dependencies</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<ignore />
-									</action>
-								</pluginExecution>
-							</pluginExecutions>
-						</lifecycleMappingMetadata>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-
 	</build>
 </project>
