@@ -10,7 +10,7 @@
 	</parent>
 	
 	<artifactId>template-machine</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>0.9.0-SNAPSHOT</version>
 	<name>template-machine</name>
 	<description>Templating engines for files</description>
 	<url>https://github.com/technicalguru/template-machine</url>

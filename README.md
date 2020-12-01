@@ -22,7 +22,7 @@ The project is in Beta phase. APIs are unlikely to change but it can still happe
 <dependency>
 	<groupId>eu.ralph-schuster</groupId>
 	<artifactId>template-machine</artifactId>
-	<version>0.9</version>
+	<version>0.9.0</version>
 </dependency>
 ```
 
