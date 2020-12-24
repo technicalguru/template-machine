@@ -29,7 +29,7 @@ import java.io.PushbackInputStream;
  * and will skip bytes if getEncoding() method is called
  * before any of the read(...) methods.
  *
- * Usage pattern:
+ * Usage pattern:<pre>
     String enc = "ISO-8859-1"; // or NULL to use systemdefault
     FileInputStream fis = new FileInputStream(file);
     UnicodeInputStream uin = new UnicodeInputStream(fis, enc);
@@ -37,6 +37,7 @@ import java.io.PushbackInputStream;
     InputStreamReader in;
     if (enc == null) in = new InputStreamReader(uin);
     else in = new InputStreamReader(uin, enc);
+    </pre>
  */
 public class UnicodeInputStream extends InputStream {
 	
@@ -103,7 +104,6 @@ public class UnicodeInputStream extends InputStream {
 			encoding = defaultEnc;
 			unread = n;
 		}      
-		//System.out.println("read=" + n + ", unread=" + unread);
 
 		if (unread > 0) internalIn.unread(bom, (n - unread), unread);
 
@@ -111,13 +111,11 @@ public class UnicodeInputStream extends InputStream {
 	}
 
 	public void close() throws IOException {
-		//init();
 		isInited = true;
 		internalIn.close();
 	}
 
 	public int read() throws IOException {
-		//init();
 		isInited = true;
 		return internalIn.read();
 	}

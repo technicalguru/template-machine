@@ -52,17 +52,7 @@ public class TemplateMachine {
 	public GenerationInfo generate() {
 		try {
 			log.info("Generating project "+rootContext.getSourceRoot()+"...");
-			
-			/*
-			// Encoding
-			System.setProperty("file.encoding", rootContext.getReadEncoding().name());
 
-			// Root Context
-			Context rootContext = new Context(rootContext.getSourceDir(), rootContext.getOutputDir(), rootContext.getSubDir(), rootContext.getConfig());
-			rootContext.setReadEncoding(rootContext.getReadEncoding());
-			rootContext.setWriteEncoding(rootContext.getWriteEncoding());
-			rootContext.setIgnoredFiles(rootContext.getIgnoredFiles());
-			*/
 			// Recursively dive into the folder and generate the templates
 			GenerationInfo rc = generateRecursively(rootContext);
 			log.info("You will find your generated files in "+rootContext.getOutputRoot());

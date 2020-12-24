@@ -31,21 +31,16 @@ public class Generator implements Runnable, TemplateLoader {
 	/** The logger */
 	public static Logger log = LoggerFactory.getLogger(Generator.class);
 
-	protected Context                        context;
-	//protected Generator                      parent;
-	//protected GeneratorConfig                generatorConfig;
-	//protected Properties                     templates;
-	//protected Map<String,Properties>         localization;
-	protected Configuration                  freemarkerConfig;
-	protected long                           lastModified;
-	protected GenerationInfo           info;
+	protected Context        context;
+	protected Configuration  freemarkerConfig;
+	protected long           lastModified;
+	protected GenerationInfo info;
+	
 	/**
 	 * Constructor.
 	 */
 	public Generator(Context context) {
 		this.context          = context;
-//		this.parent           = parent;
-//		this.generatorConfig  = generatorConfig;
 		this.lastModified     = System.currentTimeMillis();
 		info                  = new GenerationInfo();
 
