@@ -21,6 +21,7 @@ public class FileReadUtils {
 	 * @param file     - the file to be read
 	 * @param encoding - the encoding
 	 * @return the reader
+	 * @throws IOException - when the reader cannot be created
 	 */
 	public static Reader getReader(File file, String encoding) throws IOException {
 		return getReader(file, Charset.forName(encoding));
@@ -31,6 +32,7 @@ public class FileReadUtils {
 	 * @param file     - the file to be read
 	 * @param encoding - the encoding
 	 * @return the reader
+	 * @throws IOException - when the reader cannot be created
 	 */
 	public static Reader getReader(File file, Charset encoding) throws IOException {
 		Reader rc = null;
@@ -50,7 +52,7 @@ public class FileReadUtils {
 	 * @param file     - the file to be read
 	 * @param encoding - the encoding
 	 * @return the contents of the file
-	 * @throws IOException
+	 * @throws IOException when the file cannot be read
 	 */
 	public static String readFile(File file, Charset encoding) throws IOException {
 		CharArrayWriter writer = null;

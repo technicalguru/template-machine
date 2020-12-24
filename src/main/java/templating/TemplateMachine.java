@@ -41,6 +41,7 @@ public class TemplateMachine {
 	
 	/**
 	 * Constructor.
+	 * @param rootContext - the root context for the machine
 	 */
 	public TemplateMachine(Context rootContext) {
 		this.rootContext = rootContext;
@@ -48,21 +49,12 @@ public class TemplateMachine {
 
 	/**
 	 * Generate the project files.
+	 * @return the generation information from the run (statistics)
 	 */
 	public GenerationInfo generate() {
 		try {
 			log.info("Generating project "+rootContext.getSourceRoot()+"...");
-			
-			/*
-			// Encoding
-			System.setProperty("file.encoding", rootContext.getReadEncoding().name());
 
-			// Root Context
-			Context rootContext = new Context(rootContext.getSourceDir(), rootContext.getOutputDir(), rootContext.getSubDir(), rootContext.getConfig());
-			rootContext.setReadEncoding(rootContext.getReadEncoding());
-			rootContext.setWriteEncoding(rootContext.getWriteEncoding());
-			rootContext.setIgnoredFiles(rootContext.getIgnoredFiles());
-			*/
 			// Recursively dive into the folder and generate the templates
 			GenerationInfo rc = generateRecursively(rootContext);
 			log.info("You will find your generated files in "+rootContext.getOutputRoot());
@@ -74,9 +66,8 @@ public class TemplateMachine {
 	
 	/**
 	 * Generate recursively
-	 * @param parent - the parent generator to allow overriding templates and localizations
-	 * @param sourceDir    - the directory to process
-	 * @param outputDir - the output directory
+	 * @param context - the context to execute
+	 * @return the generation information from the recursive generation (statistics)
 	 */
 	protected GenerationInfo generateRecursively(Context context) {
 		// Create the generator

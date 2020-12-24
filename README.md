@@ -6,9 +6,7 @@ This application allows you to generate a complex tree of files based on [Freema
 that configuration, localizations and templates can be overridden in sub-folders of the tree as well as default language values and language aliases can be defined.
 
 ## Status and Roadmap
-The project is in Beta phase. APIs are unlikely to change but it can still happen. However, it is already being used in a productive setup at a larger corporate to produce email templates in various languages and for various subsidiaries in a large scale.
-
-* Release 1.0 is expected to be available by January 2021.
+The project is stable. APIs are will not change in major versions. I use it a productive setup at a larger corporate to produce email templates in various languages and for various subsidiaries in a large scale.
 
 ## Features
 * Generates a tree of files based on a tree of templates
@@ -22,7 +20,7 @@ The project is in Beta phase. APIs are unlikely to change but it can still happe
 <dependency>
 	<groupId>eu.ralph-schuster</groupId>
 	<artifactId>template-machine</artifactId>
-	<version>0.9.0</version>
+	<version>1.0.0</version>
 </dependency>
 ```
 

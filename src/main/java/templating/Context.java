@@ -312,7 +312,6 @@ public class Context {
 
 	/**
 	 * Override parent definitions of templates.
-	 * @throws IOException - when the templates cannot be read
 	 */
 	protected void loadLocalTemplates() {
 		try {
