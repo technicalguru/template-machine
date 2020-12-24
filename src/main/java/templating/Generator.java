@@ -38,6 +38,7 @@ public class Generator implements Runnable, TemplateLoader {
 	
 	/**
 	 * Constructor.
+	 * @param context - the generation context.
 	 */
 	public Generator(Context context) {
 		this.context          = context;
@@ -99,6 +100,8 @@ public class Generator implements Runnable, TemplateLoader {
 	 * @param templateFile - the template file
 	 * @param language     - the language to be used (cannot be null)
 	 * @param outFile      - the output file
+	 * @throws IOException - when IO methods fail
+	 * @throws TemplateException - when templating fails
 	 */
 	protected void generateFile(File templateFile, String language, File outFile) throws IOException, TemplateException {
 		// Ignore when the is a language specific template file

@@ -20,7 +20,7 @@ public class TemplatingException extends RuntimeException {
 
 	/**
 	 * Constructor.
-	 * @param message
+	 * @param message - message for exception
 	 */
 	public TemplatingException(String message) {
 		super(message);
@@ -28,7 +28,7 @@ public class TemplatingException extends RuntimeException {
 
 	/**
 	 * Constructor.
-	 * @param cause
+	 * @param cause - root cause of exception
 	 */
 	public TemplatingException(Throwable cause) {
 		super(cause);
@@ -36,8 +36,8 @@ public class TemplatingException extends RuntimeException {
 
 	/**
 	 * Constructor.
-	 * @param message
-	 * @param cause
+	 * @param message - message for exception
+	 * @param cause - root cause of exception
 	 */
 	public TemplatingException(String message, Throwable cause) {
 		super(message, cause);
@@ -45,10 +45,10 @@ public class TemplatingException extends RuntimeException {
 
 	/**
 	 * Constructor.
-	 * @param message
-	 * @param cause
-	 * @param enableSuppression
-	 * @param writableStackTrace
+	 * @param message - message for exception
+	 * @param cause - root cause of exception
+	 * @param enableSuppression - whether or not suppression is enabled or disabled
+	 * @param writableStackTrace - whether or not the stack trace should be writable
 	 */
 	public TemplatingException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);

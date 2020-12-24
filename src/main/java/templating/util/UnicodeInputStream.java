@@ -73,6 +73,7 @@ public class UnicodeInputStream extends InputStream {
 	/**
 	 * Read-ahead four bytes and check for BOM marks. Extra bytes are
 	 * unread back to the stream, only BOM bytes are skipped.
+	 * @throws IOException when the initialization cannot skip the BOM marks
 	 */
 	protected void init() throws IOException {
 		if (isInited) return;

@@ -41,6 +41,7 @@ public class TemplateMachine {
 	
 	/**
 	 * Constructor.
+	 * @param rootContext - the root context for the machine
 	 */
 	public TemplateMachine(Context rootContext) {
 		this.rootContext = rootContext;
@@ -48,6 +49,7 @@ public class TemplateMachine {
 
 	/**
 	 * Generate the project files.
+	 * @return the generation information from the run (statistics)
 	 */
 	public GenerationInfo generate() {
 		try {
@@ -64,9 +66,8 @@ public class TemplateMachine {
 	
 	/**
 	 * Generate recursively
-	 * @param parent - the parent generator to allow overriding templates and localizations
-	 * @param sourceDir    - the directory to process
-	 * @param outputDir - the output directory
+	 * @param context - the context to execute
+	 * @return the generation information from the recursive generation (statistics)
 	 */
 	protected GenerationInfo generateRecursively(Context context) {
 		// Create the generator
