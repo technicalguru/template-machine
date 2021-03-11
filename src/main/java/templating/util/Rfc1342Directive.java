@@ -93,7 +93,8 @@ public class Rfc1342Directive implements TemplateDirectiveModel {
 			try {
 				String orig = new String(cbuf, off, len);
 				String words = codec.encode(orig);
-				out.write(words.replace(" ", "_"));
+				//words = words.replace(" ", "_");
+				out.write(words);
 			} catch (EncoderException e) {
 				throw new IOException("Cannot encode", e);
 			}
