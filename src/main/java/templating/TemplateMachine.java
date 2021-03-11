@@ -45,6 +45,7 @@ public class TemplateMachine {
 	 */
 	public TemplateMachine(Context rootContext) {
 		this.rootContext = rootContext;
+		
 	}
 
 	/**
@@ -105,8 +106,7 @@ public class TemplateMachine {
 			if (outDir == null) {
 				// Generating the output folder name
 				String datetime = DATETIMEBUILDER.format(generationTime);
-				outDir = projectDir+"-"+datetime;
-				
+				outDir = projectDir+"-"+datetime;			
 			}
 			
 			// Handle any existing output directory
@@ -139,6 +139,7 @@ public class TemplateMachine {
 			// Read config
 			if (configFile != null) {
 				config = load(configFile);
+				log.info("Using config: "+configFile.getCanonicalPath());
 			}
 
 			// The sub dir if it exists
@@ -149,6 +150,7 @@ public class TemplateMachine {
 				if (!subDirFile.exists() || !subDirFile.isDirectory()) {
 					throw new TemplatingException("Sub-directory "+subDirFile.getCanonicalPath()+" does not exist");
 				}
+				log.info("Sub dir generation only: "+subDirFile.getCanonicalPath());
 			}
 			
 			// Create rootContext
@@ -162,6 +164,7 @@ public class TemplateMachine {
 			}
 			Charset readEncoding = Charset.forName(readEncodingName);
 			rootContext.setReadEncoding(readEncoding);
+			log.info("Using read encoding: "+readEncoding.displayName());
 			
 			// Writing encoding
 			String writeEncodingName = Charset.defaultCharset().name();
@@ -170,6 +173,7 @@ public class TemplateMachine {
 			}
 			Charset writeEncoding = Charset.forName(writeEncodingName);
 			rootContext.setWriteEncoding(writeEncoding);
+			log.info("Using write encoding: "+writeEncoding.displayName());
 			
 			// Now the machine itself
 			TemplateMachine machine = new TemplateMachine(rootContext);

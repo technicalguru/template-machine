@@ -12,4 +12,4 @@
 @SET JAVABIN=java
 @IF NOT "%JAVA_HOME%"=="" @SET JAVABIN=%JAVA_HOME%\bin\java
 
-@"%JAVABIN%" -cp "%CLASSPATH%" templating.TemplateMachine %*
+@"%JAVABIN%" -Dfile.encoding=UTF-8 -cp "%CLASSPATH%" templating.TemplateMachine %*

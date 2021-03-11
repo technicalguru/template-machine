@@ -20,7 +20,7 @@ The project is stable. APIs are will not change in major versions. I use it a pr
 <dependency>
 	<groupId>eu.ralph-schuster</groupId>
 	<artifactId>template-machine</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.2</version>
 </dependency>
 ```
 
