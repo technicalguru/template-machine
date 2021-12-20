@@ -21,6 +21,10 @@ java -classpath $CLASSPATH templating.TemplateMachine [<arguments>]
 java.exe -classpath %CLASSPATH% templating.TemplateMachine [<arguments>]
 ```
 
+## File encoding
+Please notice that file-encoding can be tricky with Java. You might need to add the `-Dfile.encoding=UTF-8` parameter
+in your call (replace the charset name if required).
+
 ## Command-Line Arguments
 
 Starting the *template-machine* without any arguments will give you a short help text:

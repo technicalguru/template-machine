@@ -5,10 +5,12 @@ package templating.util;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.QuotedPrintableCodec;
 
 import freemarker.core.Environment;
@@ -90,13 +92,14 @@ public class Rfc1342Directive implements TemplateDirectiveModel {
 		}
 
 		public void write(char[] cbuf, int off, int len) throws IOException {
-			try {
 				String orig = new String(cbuf, off, len);
-				String words = codec.encode(orig);
-				out.write(words.replace(" ", "_"));
-			} catch (EncoderException e) {
-				throw new IOException("Cannot encode", e);
-			}
+				// orig is in system default charset which can only be influenced outside of code (java -D flag)
+				// The following lines try to fix it but still fail on Windows 10
+				Charset internalDefault = Charset.defaultCharset();
+				byte origBytes[] = orig.getBytes();
+				CharBuffer utf8Buffer = internalDefault.decode(ByteBuffer.wrap(origBytes));
+				String words = codec.encode(utf8Buffer.toString(), StandardCharsets.UTF_8);
+				out.write(words);
 		}
 
 		public void flush() throws IOException {
