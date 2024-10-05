@@ -3,8 +3,7 @@
  */
 package templating;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -18,11 +17,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
 
 import templating.util.DirFinder;
 
@@ -31,7 +28,6 @@ import templating.util.DirFinder;
  * @author ralph
  *
  */
-@RunWith(Parameterized.class)
 public class TemplateMachineTest {
 
 	public static File TEMPLATE_DIR = null;
@@ -54,7 +50,7 @@ public class TemplateMachineTest {
 	 * Generate the test.
 	 */
 	public static void generateValues() throws IOException {
-		assertTrue("TEMPLATE_DIR "+TEMPLATE_DIR.getAbsolutePath()+" cannot be found (Are you running outside of project dir?)", TEMPLATE_DIR.exists());
+		assertThat(TEMPLATE_DIR.exists()).isTrue().withFailMessage("TEMPLATE_DIR "+TEMPLATE_DIR.getAbsolutePath()+" cannot be found (Are you running outside of project dir?)");
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
 		File configFile = new File(TEMPLATE_DIR, "template-machine.properties");
 		Context rootContext = new Context(TEMPLATE_DIR, TARGET_DIR, TEMPLATE_DIR, TemplateMachine.load(configFile));
@@ -71,11 +67,11 @@ public class TemplateMachineTest {
 	 * @return a list of test data
 	 * @throws Exception - when a problem occurs
 	 */
-	@Parameters
-	public static Collection<ValueTest> values() throws Exception {
+	@TestFactory
+	public Collection<DynamicTest> provideTests() throws Exception {
 		generateValues();
 		
-		List<ValueTest> rc = new ArrayList<>();
+		List<DynamicTest> rc = new ArrayList<>();
 		if (TARGET_DIR.isDirectory()) {
 			populateValues(rc, TARGET_DIR);
 		} else {
@@ -90,7 +86,7 @@ public class TemplateMachineTest {
 	 * @param dir        - the directory to climb down
 	 * @throws Exception - when a problem occurs
 	 */
-	private static void populateValues(List<ValueTest> collection, File dir) throws Exception {
+	private void populateValues(List<DynamicTest> collection, File dir) throws Exception {
 		for (File child : dir.listFiles()) {
 			if (child.isDirectory()) {
 				populateValues(collection, child);
@@ -106,41 +102,38 @@ public class TemplateMachineTest {
 	 * @param file       - the file to read
 	 * @throws Exception - when a problem occurs
 	 */
-	private static void populateValuesInFile(List<ValueTest> collection, File file) throws Exception {
+	private void populateValuesInFile(List<DynamicTest> collection, File file) throws Exception {
 		int line = 1;
 		for (String s : FileUtils.readLines(file, ENCODING)) {
 			if (!s.startsWith("#") && !s.trim().isEmpty()) {
-				collection.add(new ValueTest(file, line, s));
+				collection.add(getDynamicTest(new ValueTest(file, line, s)));
 			}
 			line++;
 		}
 	}
 	
-	private ValueTest testCase;
-	
 	/**
-	 * Constructor for parameterized test.
-	 * @param testCase - the test case
+	 * Creates a dynamic test using the header test case and the given test case option.
+	 * @param valueTest
+	 * @return dynamic test
 	 */
-	public TemplateMachineTest(ValueTest testCase) {
-		this.testCase = testCase;
+	private DynamicTest getDynamicTest(ValueTest valueTest) {
+		DynamicTest test = DynamicTest.dynamicTest("[line "+valueTest.lineNo+"]", () -> {
+			try {
+				Matcher matcher = PATTERN.matcher(valueTest.line); 
+				if (matcher.matches()) {
+					String valueName = matcher.group(1).trim();
+					String expected  = matcher.group(2).trim();
+					String actual    = matcher.group(3).trim();
+					assertThat(actual).isEqualTo(expected).withFailMessage("[line "+valueTest.lineNo+"] "+valueName+" fails");
+				}
+			} finally {
+			}
+		});
+		return test;
 	}
 	
-	/**
-	 * Test a single value.
-	 */
-	@Test
-	public void testValue() throws Exception {
-		Matcher matcher = PATTERN.matcher(testCase.line); 
-		if (matcher.matches()) {
-			String valueName = matcher.group(1).trim();
-			String expected  = matcher.group(2).trim();
-			String actual    = matcher.group(3).trim();
-			assertEquals(testCase.file.getCanonicalPath()+" [line "+testCase.lineNo+"] "+valueName+" fails - ", expected, actual);
-		}
-	}
-	
-	@AfterClass
+	@AfterAll
 	public static void cleanup() {
 		TARGET_DIR.delete();
 	}
