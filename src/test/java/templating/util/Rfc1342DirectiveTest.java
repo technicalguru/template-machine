@@ -8,7 +8,7 @@ import static org.junit.Assert.assertEquals;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.codec.net.QuotedPrintableCodec;
-import org.junit.Test;
+//import org.junit.Test;
 
 /**
  * Tests the Quoted Printable Codec
