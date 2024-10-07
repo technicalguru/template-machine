@@ -3,12 +3,11 @@
  */
 package templating.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.codec.net.QuotedPrintableCodec;
-//import org.junit.Test;
 
 /**
  * Tests the Quoted Printable Codec
@@ -22,7 +21,7 @@ public class Rfc1342DirectiveTest {
 		String decoded = "Atualização do estado: A sua bagagem atrasada chegou ao aeroporto e está disponível para levantamento";
 		String encoded = "Atualiza=C3=A7=C3=A3o do estado: A sua bagagem atrasada chegou ao aeroporto e est=C3=A1 dispon=C3=ADvel para levantamento";
 		
-		assertEquals("Portoguese encoding failed", encoded, encode(decoded));
+		assertThat(encode(decoded)).isEqualTo(encoded);
 	}
 	
 	protected static String encode(String s) throws Exception {

@@ -3,9 +3,9 @@
  */
 package templating;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,18 +13,16 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import templating.util.DirFinder;
 
@@ -33,7 +31,6 @@ import templating.util.DirFinder;
  * @author ralph
  *
  */
-@RunWith(Parameterized.class)
 public class SubDirTemplateMachineTest {
 
 	public static File TEMPLATE_DIR = null;
@@ -58,9 +55,9 @@ public class SubDirTemplateMachineTest {
 	/**
 	 * Generate the test.
 	 */
-	@BeforeClass
+	@BeforeAll
 	public static void generateValues() throws IOException {
-		assertTrue("TEMPLATE_DIR "+TEMPLATE_DIR.getAbsolutePath()+" cannot be found (Are you running outside of project dir?)", TEMPLATE_DIR.exists());
+		assertTrue(TEMPLATE_DIR.exists(), "TEMPLATE_DIR "+TEMPLATE_DIR.getAbsolutePath()+" cannot be found (Are you running outside of project dir?)");
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
 		File configFile = new File(TEMPLATE_DIR, "template-machine.properties");
 		Context rootContext = new Context(TEMPLATE_DIR, TARGET_DIR, SUB_DIR, TemplateMachine.load(configFile));
@@ -77,8 +74,7 @@ public class SubDirTemplateMachineTest {
 	 * @return a list of test data
 	 * @throws Exception - when a problem occurs
 	 */
-	@Parameters
-	public static Collection<ValueTest> values() throws Exception {
+	private static Stream<ValueTest> provideTestCases() throws Exception {
 		generateValues();
 		
 		List<ValueTest> rc = new ArrayList<>();
@@ -87,7 +83,7 @@ public class SubDirTemplateMachineTest {
 		} else {
 			throw new FileNotFoundException(TARGET_DIR.getCanonicalPath()+" does not exist");
 		}
-		return rc;
+		return rc.stream();
 	}
 	
 	/**
@@ -122,34 +118,25 @@ public class SubDirTemplateMachineTest {
 		}
 	}
 	
-	private ValueTest testCase;
-	
-	/**
-	 * Constructor for parameterized test.
-	 * @param testCase - the test case
-	 */
-	public SubDirTemplateMachineTest(ValueTest testCase) {
-		this.testCase = testCase;
-	}
-	
 	/**
 	 * Test a single value.
 	 */
-	@Test
-	public void testValue() throws Exception {
+	@ParameterizedTest
+	@MethodSource("provideTestCases")
+	public void testValue(ValueTest testCase) throws Exception {
 		// Fail this test if "dir-2" is part of the file
-		assertFalse("sub-dir test failed. dir-2 is part of the value test", testCase.file.getCanonicalPath().contains("/dir-2/"));
+		assertFalse(testCase.file.getCanonicalPath().contains("/dir-2/"), "sub-dir test failed. dir-2 is part of the value test");
 		
 		Matcher matcher = PATTERN.matcher(testCase.line); 
 		if (matcher.matches()) {
 			String valueName = matcher.group(1).trim();
 			String expected  = matcher.group(2).trim();
 			String actual    = matcher.group(3).trim();
-			assertEquals(testCase.file.getCanonicalPath()+" [line "+testCase.lineNo+"] "+valueName+" fails - ", expected, actual);
+			assertThat(actual).isEqualTo(expected).withFailMessage(testCase.file.getCanonicalPath()+" [line "+testCase.lineNo+"] "+valueName+" fails");
 		}
 	}
 	
-	@AfterClass
+	@AfterAll
 	public static void cleanup() {
 		TARGET_DIR.delete();
 	}
