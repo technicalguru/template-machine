@@ -3,8 +3,8 @@
  */
 package templating;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,8 +13,8 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import templating.util.DirFinder;
 import templating.util.GenerationInfo;
@@ -46,9 +46,9 @@ public class LanguageTest {
 	/**
 	 * Generate the test.
 	 */
-	@BeforeClass
+	@BeforeAll
 	public static void generateValues() throws IOException {
-		assertTrue("TEMPLATE_DIR "+TEMPLATE_DIR.getAbsolutePath()+" cannot be found (Are you running outside of project dir?)", TEMPLATE_DIR.exists());
+		assertTrue(TEMPLATE_DIR.exists(), "TEMPLATE_DIR "+TEMPLATE_DIR.getAbsolutePath()+" cannot be found (Are you running outside of project dir?)");
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
 		File configFile = new File(TEMPLATE_DIR, "template-machine.properties");
 		Context rootContext = new Context(TEMPLATE_DIR, TARGET_DIR, TEMPLATE_DIR, TemplateMachine.load(configFile));
@@ -63,29 +63,29 @@ public class LanguageTest {
 	@Test
 	public void testLanguageCount() {
 		Collection<String> languages = info.getLanguages();
-		assertEquals("Number of generated languages is incorrect", 3, languages.size());
+		assertEquals(3, languages.size(), "Number of generated languages is incorrect");
 	}
 	
 	@Test
 	public void testLanguageDE() {
 		Collection<String> languages = info.getLanguages();
-		assertTrue("German was not generated", languages.contains("de"));
+		assertTrue(languages.contains("de"), "German was not generated");
 	}
 	
 	@Test
 	public void testLanguageEN() {
 		Collection<String> languages = info.getLanguages();
-		assertTrue("English was not generated", languages.contains("en"));
+		assertTrue(languages.contains("en"), "English was not generated");
 	}
 	
 	@Test
 	public void testLanguageES() {
 		Collection<String> languages = info.getLanguages();
-		assertTrue("Spanish was not generated", languages.contains("es"));
+		assertTrue(languages.contains("es"), "Spanish was not generated");
 	}
 	
 	@Test
 	public void testFilesCount() {
-		assertEquals("Invalid number of files generated", 12, info.getFiles());
+		assertEquals(12, info.getFiles(), "Invalid number of files generated");
 	}
 }
