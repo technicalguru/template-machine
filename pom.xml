@@ -8,7 +8,7 @@
 	</parent>
 	
 	<artifactId>template-machine</artifactId>
-	<version>1.1.1-SNAPSHOT</version>
+	<version>1.1.3-SNAPSHOT</version>
 	<name>template-machine</name>
 	<description>Templating engines for files</description>
 	<url>https://github.com/technicalguru/template-machine</url>
