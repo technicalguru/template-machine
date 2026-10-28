@@ -3,7 +3,7 @@
  */
 package templating.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.charset.StandardCharsets;
 
@@ -21,7 +21,7 @@ public class Rfc1342DirectiveTest {
 		String decoded = "Atualização do estado: A sua bagagem atrasada chegou ao aeroporto e está disponível para levantamento";
 		String encoded = "Atualiza=C3=A7=C3=A3o do estado: A sua bagagem atrasada chegou ao aeroporto e est=C3=A1 dispon=C3=ADvel para levantamento";
 		
-		assertThat(encode(decoded)).isEqualTo(encoded);
+		assertEquals(encoded, encode(decoded));
 	}
 	
 	protected static String encode(String s) throws Exception {

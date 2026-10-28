@@ -3,7 +3,8 @@
  */
 package templating;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -50,7 +51,7 @@ public class TemplateMachineTest {
 	 * Generate the test.
 	 */
 	public static void generateValues() throws IOException {
-		assertThat(TEMPLATE_DIR.exists()).isTrue().withFailMessage("TEMPLATE_DIR "+TEMPLATE_DIR.getAbsolutePath()+" cannot be found (Are you running outside of project dir?)");
+		assertTrue(TEMPLATE_DIR.exists(), "TEMPLATE_DIR "+TEMPLATE_DIR.getAbsolutePath()+" cannot be found (Are you running outside of project dir?)");
 		if (TARGET_DIR.exists()) FileUtils.deleteDirectory(TARGET_DIR);
 		File configFile = new File(TEMPLATE_DIR, "template-machine.properties");
 		Context rootContext = new Context(TEMPLATE_DIR, TARGET_DIR, TEMPLATE_DIR, TemplateMachine.load(configFile));
@@ -125,7 +126,7 @@ public class TemplateMachineTest {
 					String valueName = matcher.group(1).trim();
 					String expected  = matcher.group(2).trim();
 					String actual    = matcher.group(3).trim();
-					assertThat(actual).isEqualTo(expected).withFailMessage("[line "+valueTest.lineNo+"] "+valueName+" fails");
+					assertEquals(expected, actual, "[line "+valueTest.lineNo+"] "+valueName+" fails");
 				}
 			} finally {
 			}
