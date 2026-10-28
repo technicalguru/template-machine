@@ -3,7 +3,7 @@
  */
 package templating;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -132,7 +132,7 @@ public class SubDirTemplateMachineTest {
 			String valueName = matcher.group(1).trim();
 			String expected  = matcher.group(2).trim();
 			String actual    = matcher.group(3).trim();
-			assertThat(actual).isEqualTo(expected).withFailMessage(testCase.file.getCanonicalPath()+" [line "+testCase.lineNo+"] "+valueName+" fails");
+			assertEquals(expected, actual, testCase.file.getCanonicalPath()+" [line "+testCase.lineNo+"] "+valueName+" fails");
 		}
 	}
 	
